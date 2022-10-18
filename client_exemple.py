@@ -21,7 +21,7 @@ PORT = 65432
 def client_exemple():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((LOCALHOST, PORT))
-    client.sendall(bytes("SPV_CAP", 'UTF-8'))  # Envoi de son identifiant
+    client.sendall(bytes("SPV_CAP", 'UTF-8'))  # Envoi de son identifiant au central
 
     while True:
         in_data = client.recv(1024)
