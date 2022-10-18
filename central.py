@@ -28,13 +28,16 @@ class ClientThread(threading.Thread):
         self.client_socket = client_socket
         self.client_address = client_address
         print("New connection added: ", client_address)
-        print("socket", client_socket)
 
     def run(self):
         """Surcharge de la méthode run() de la classe mère Thread"""
-        print("Connection from : ", self.client_address)
 
-        # Demander qui c'est qui est co?????
+        identifiant_client = ""
+        """Cette chaine de caractères prendra le nom du client connecté"""
+
+        print("Connection from : ", self.client_address)
+        identifiant_client = self.client_socket.recv(2048).decode()
+        clients_connected[identifiant_client] = self.client_socket
 
         while True:
             """Boucle infinie écoutant les messages du client arrivant sur la socket associée"""
@@ -65,7 +68,6 @@ def main():
 
         new_thread = ClientThread(client_sock, client_address)
         new_thread.start()
-
 
 if __name__ == '__main__':
     main()
