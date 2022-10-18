@@ -11,6 +11,7 @@
 import socket
 import threading
 
+
 # ______________________________CONSTANTES_______________________________
 LOCALHOST = "127.0.0.1"
 PORT = 65432
@@ -18,8 +19,6 @@ clients_connected = {}
 
 
 # ________________________DEFINITION DE LA CLASS_________________________
-
-
 class ClientThread(threading.Thread):
     """Classe représentant le thread qui gère la communication avec un autre élément de la partie pilotage"""
 
@@ -54,12 +53,13 @@ class ClientThread(threading.Thread):
         clients_connected.pop(identifiant_client, None)  # On enlève le client dans le dict des clients connectés
 
 
+# __________________________FONCTIONS GLOBALES___________________________
 def nb_client_connected():
     """Renvoie le nombre de clients connectés"""
     return len(clients_connected)
 
 
-def main():
+def central():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((LOCALHOST, PORT))
@@ -76,5 +76,6 @@ def main():
         print(nb_client_connected())
 
 
+# _________________________________MAIN__________________________________
 if __name__ == '__main__':
-    main()
+    central()
