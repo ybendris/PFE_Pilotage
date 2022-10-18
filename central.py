@@ -51,6 +51,12 @@ class ClientThread(threading.Thread):
                 break
 
         print("Client at ", self.client_address, " disconnected...")
+        clients_connected.pop(identifiant_client, None)  # On enlève le client dans le dict des clients connectés
+
+
+def nb_client_connected():
+    """Renvoie le nombre de clients connectés"""
+    return len(clients_connected)
 
 
 def main():
@@ -64,10 +70,11 @@ def main():
         server.listen(1)
 
         client_sock, client_address = server.accept()
-        clients_connected
 
         new_thread = ClientThread(client_sock, client_address)
         new_thread.start()
+        print(nb_client_connected())
+
 
 if __name__ == '__main__':
     main()
