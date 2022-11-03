@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+
+""" Nom du module : SelectorClient"""
+""" Description """
+""" Version 2 """
+""" Date : 03/11/2022"""
+""" Auteur : Equipe CEIS """
+""""""
+
+#  _________________________________________ IMPORT _________________________________________
 import sys
 import logging
 import selectors
@@ -6,17 +16,20 @@ import time
 import random
 import pickle
 
+#  _________________________________________ CONSTANTES _________________________________________
 HOST = 'localhost'
 PORT = 65432
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(messagee)s')
-
+#  _________________________________________ DEFINITION DE CLASSES _________________________________________
 class SelectorClient:
+    """ Nom de la classe : SelectorClient """
+    """ Description : Classe représentant un élément qui se connecte à un serveur pour lui envoyer tous ces messages """
     def __init__(self, host, port, name):
         self.name = name
-        # création de la socket
+        # Création du socket principal se connectant au serveur
+        # Socket AF_INET (IPV4) / Socket STREAM (TCP)
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # On connecte la socket à un serveur existant
+        # On connecte le socket à un serveur existant
         self.connected = self.main_socket.connect_ex((host, port))
         # Séparateur pour séparer les messages dans le buffer
         self._separator = b'[...]'
@@ -25,15 +38,13 @@ class SelectorClient:
         self._buffer = {}
         # On initialise le buffer
         self._buffer[self.main_socket.fileno()]="".encode()
-        # Create the selector object that will dispatch events. Register
-        # interest in read events, that include incoming connections.
-        # The handler method is passed in data so we can fetch it in
-        # serve_forever.
+        # Création de l'objet sélector qui distribuera les événements.
         self.selector = selectors.DefaultSelector()
         self.envoi_abonnement()
+        # Création de l'objet sélector qui distribuera les événements.
         self.selector.register(fileobj=self.main_socket,
                                events=selectors.EVENT_READ | selectors.EVENT_WRITE,
-                               data=self.test)
+                               data=self.service)
         
 
     def envoi_abonnement(self):
@@ -45,7 +56,7 @@ class SelectorClient:
 
             serialized_message = pickle.dumps(message)
 
-            sent = conn.send(serialized_message + self._separator)  # Should be ready to write
+            sent = conn.send(serialized_message + self._separator)
 
         except:  # TODO à voir
             print("CN/socket fermée/sent W", """self._closed""")
@@ -54,7 +65,7 @@ class SelectorClient:
             del self._buffer[conn]
             return False
 
-    def test(self,conn, mask):
+    def service(self, conn, mask):
         if mask & selectors.EVENT_READ:
             print("\nREAD\n")
             try:
@@ -64,7 +75,6 @@ class SelectorClient:
                 if data:
                     peername = conn.getpeername()
                     #logging.info('got data from {}: {!r}'.format(peername, data))
-                    # Assume for simplicity that send won't block
                     # on ajoute les données à la suite dans le buffer de la socket correspondante
                     self._buffer[conn.fileno()] += data
                     #logging.info('ajout dans le buffer {}: {!r}'.format(self._buffer[conn.fileno()], data))
@@ -115,7 +125,7 @@ class SelectorClient:
 
                 serialized_message = pickle.dumps(message)
 
-                sent = conn.send(serialized_message+self._separator)	 # Should be ready to write
+                sent = conn.send(serialized_message+self._separator)
 
             except: #TODO à voir
                 print("CN/socket fermée/sent W", """self._closed""")
@@ -128,19 +138,22 @@ class SelectorClient:
 
     def serve_forever(self):
         while True:
-            
-            # Wait until some registered socket becomes ready. This will block
-            # for 0 ms. (en seconde)
+            # Attente qu'un socket enregistré à l'aide de register soit prêt
             events = self.selector.select(timeout=0)
-            time.sleep(2)
-            # For each new event, dispatch to its handler
+            time.sleep(2) #toutes les deux secondes (à changer)
+
+            # Pour chaque nouvel événement, envoyez un message à son gestionnaire.
             for key, mask in events:
                 handler = key.data
                 handler(key.fileobj, mask)
 
 
+#  _________________________________________ FONCTIONS GLOBALES _________________________________________
 
+
+#  _________________________________________ MAIN _________________________________________
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
     logging.info('starting')
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <name>")

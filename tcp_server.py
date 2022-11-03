@@ -1,80 +1,82 @@
+#!/usr/bin/env python3
+
+""" Nom du module : SelectorServer"""
+""" Description : Serveur qui accepte les connexions et redirige les messages"""
+""" Version 2 """
+""" Date : 03/11/2022"""
+""" Auteur : Equipe CEIS """
+""""""
+
+#  _________________________________________ IMPORT _________________________________________
 import logging
 import selectors
 import socket
 import time
 import pickle
 
+#  _________________________________________ CONSTANTES _________________________________________
+
 HOST = 'localhost'
 PORT = 65432
 
-# print améliorer
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(messagee)s')
 
-#class du serveur
+#  _________________________________________ DEFINITION DE CLASSES _________________________________________
 class SelectorServer:
-    
+    """ Nom de la classe : SelectorServer """
+    """ Description : Classe représentant un serveur qui accepte les connexions et redirige les messages """
     def __init__(self, host, port):
-        # Create the main socket that accepts incoming connections and start
-        # listening. The socket is nonblocking.
-        # création de la socket
+        # Création du socket principal acceptant les connexions en mode
+        # Socket AF_INET (IPV4) / Socket STREAM (TCP)
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # la socket est liée à un hôte et un port
+        # Le socket est lié à un hôte et un port
         self.main_socket.bind((host, port))
         # On accepte les connexions
-        self.main_socket.listen(1)
-        # On place la socket en mode non bloquant, c'est-à-dire qu'elle ne reste pas en attente d'une reception
+        self.main_socket.listen(5)
+        # On place le socket en mode non bloquant, c'est-à-dire qu'elle ne reste pas en attente d'une reception
         self.main_socket.setblocking(False)
         # Dictionnaire qui contiendra les buffers de messages pour chaque socket
-        # clé=N°Socket valeur=buffer de message (dictionnaire)
+        # clé=N°Socket(descripteur de fichier) valeur=buffer de message (dictionnaire)
         self._buffer = {}
         # Dictionnaire qui contiendra la socket de chaque entité
         # clé=index valeur=dictionnaire contenant les informations de la socket
         self._fileno_to_socket = {}
         self._name_to_socket = {}
         # Dictionnaire qui contiendra les abonnements de chaque entité
-        # clé=N°Socket valeur={DATA, LOG, CMD}[N°Socket]
+        # clé=N°Socket(descripteur de fichier) valeur={DATA, LOG, CMD}[N°Socket]
         self._abonnement = {
-            'DATA' : [],
-            'LOG' : []
+            'DATA': [],
+            'LOG': []
         }
-        # Séparateur pour séparer les messages dans le buffer
+        # Séparateur utilisé pour séparer les messages dans le buffer
         self._separator = b'[...]'
-        #self.nb = 0
 
-        # Create the selector object that will dispatch events. Register
-        # interest in read events, that include incoming connections.
-        # The handler method is passed in data so we can fetch it in
-        # serve_forever.
+        # Création de l'objet sélector qui distribuera les événements.
         self.selector = selectors.DefaultSelector()
         self.selector.register(fileobj=self.main_socket,
                                events=selectors.EVENT_READ,
                                data=self.on_accept)
 
-        # Keeps track of the peers currently connected. Maps socket fd to
-        # peer name.
+        # Dictionnaire qui contiendra les informations de connexion de chaque entité connectée
+        # # clé=N°Socket(descripteur de fichier) valeur=peername
         self.current_peers = {}
 
     # Fonction en charge d'accepter les connexions au serveur
     def on_accept(self, sock, mask):
-        # This is a handler for the main_socket which is now listening, so we
-        # know it's ready to accept a new connection.
+        # Gestionnaire de connexion
         conn, addr = self.main_socket.accept()
 
         logging.info('accepted connection from {0}'.format(addr))
         conn.setblocking(False)
-        # logging.info('Socket: {0}'.format(sock))
 
-        #On initialise le buffer
-        self._buffer[conn.fileno()]="".encode()
+        # On initialise le buffer de messages lié à ce socket
+        self._buffer[conn.fileno()] = "".encode()
 
-        # On stocke le nom du port de connection dans le dictionnaire de buffers
         self.current_peers[conn.fileno()] = conn.getpeername()
 
         self._fileno_to_socket[conn.fileno()] = conn
 
         self.on_abonnement(conn=conn)
-        # Register interest in read events on the new socket, dispatching to
-        # self.on_read
+        # Les évènements de type EVENT_READ sur le socket 'conn' seront transmis à la méthode on_read
         self.selector.register(fileobj=conn, events=selectors.EVENT_READ,
                                data=self.on_read)
 
@@ -88,7 +90,7 @@ class SelectorServer:
                 peername = conn.getpeername()
                 # logging.info('got data from {}: {!r}'.format(peername, data))
                 logging.info('got data from {}'.format(peername))
-                # Assume for simplicity that send won't block
+
                 # on ajoute les données à la suite dans le buffer de la socket correspondante
                 self._buffer[conn.fileno()] += data
                 # logging.info('ajout dans le buffer {}: {!r}'.format(self._buffer[conn.fileno()], data))
@@ -103,13 +105,12 @@ class SelectorServer:
                     recv_data = self._buffer[conn.fileno()][:fin]
                     # appel obj->receive
 
-                    #logging.info('Traitement de: "{0}"'.format(pickle.loads(recv_data)))
-                    # self.nb = self.nb + 1
+                    # logging.info('Traitement de: "{0}"'.format(pickle.loads(recv_data)))
 
-                    deserialized_message=pickle.loads(recv_data)
+                    deserialized_message = pickle.loads(recv_data)
                     logging.info('Traitement de: "{0}"'.format(deserialized_message))
 
-                    self._name_to_socket[deserialized_message['expediteur']]=conn
+                    self._name_to_socket[deserialized_message['expediteur']] = conn
 
                     for type in deserialized_message['msg']:
                         self._abonnement[type].append(conn.fileno())
@@ -134,15 +135,20 @@ class SelectorServer:
             self.close_connection(conn)
 
     def close_connection(self, conn):
-        # We can't ask conn for getpeername() here, because the peer may no
-        # longer exist (hung up); instead we use our own mapping of socket
-        # fds to peer names - our socket fd is still open.
+        # On ne peut pas appeler getpeername() ici, car la connexion a été perdu
+        # On peut utiliser notre structure de données à la place
         peername = self.current_peers[conn.fileno()]
         logging.info('closing connection to {0}'.format(peername))
         del self.current_peers[conn.fileno()]
+        # On supprime les abonnements auquel l'élément déconnecté était abonné
+        for abonnement in self._abonnement:
+            try:
+                self._abonnement[abonnement].remove(conn.fileno())
+            except ValueError:
+                pass
+        #logging.info('Abonnement => "{0}"'.format(self._abonnement))
         self.selector.unregister(conn)
         conn.close()
-        # TODO : Supprimer les abonnements de conn.fileno()
 
     def on_read(self, conn, mask):
         # This is a handler for peer sockets - it's called when there's new
@@ -155,9 +161,9 @@ class SelectorServer:
             # Si des données ont été reçu
             if data:
                 peername = conn.getpeername()
-                #logging.info('got data from {}: {!r}'.format(peername, data))
+                # logging.info('got data from {}: {!r}'.format(peername, data))
                 logging.info('got data from {}'.format(peername))
-                # Assume for simplicity that send won't block
+
                 # on ajoute les données à la suite dans le buffer de la socket correspondante
                 self._buffer[conn.fileno()] += data
                 # logging.info('ajout dans le buffer {}: {!r}'.format(self._buffer[conn.fileno()], data))
@@ -168,45 +174,43 @@ class SelectorServer:
                 # logging.info('fin du message à traiter en position {}.'.format(fin))
                 # Si on a un ou plusieurs messages complets dans le buffer
                 while fin > -1 and cpt < 30:
-                    #le prochain message à decrypter
+                    # le prochain message à decrypter
                     recv_data = self._buffer[conn.fileno()][:fin]
-                    #appel obj->receive
+                    # appel obj->receive
 
-                    #logging.info('Traitement de: "{0}"'.format(pickle.loads(recv_data)))
-                    #self.nb = self.nb + 1
+                    # logging.info('Traitement de: "{0}"'.format(pickle.loads(recv_data)))
+                    # self.nb = self.nb + 1
 
-                    self.rediriger(recv_data,conn)
+                    self.rediriger(recv_data, conn)
 
-                    #print('CN/received {}bytes from connection'.format(len(recv_data)), sock.getpeername())
-                    #le reste
+                    # print('CN/received {}bytes from connection'.format(len(recv_data)), sock.getpeername())
+                    # le reste
                     # S'il reste un message incomplet au moment du traitement,
                     # on le stocke, on vide le buffer et on le replace dans celui-ci
-                    reste = self._buffer[conn.fileno()][fin+len(self._separator):]
+                    reste = self._buffer[conn.fileno()][fin + len(self._separator):]
                     self._buffer[conn.fileno()] = reste
                     fin = self._buffer[conn.fileno()].find(self._separator)
-                    cpt+=1
+                    cpt += 1
 
                 # S'il reste un message complet à la fin de la lecture, cela veut dire qu'il y a un engorgement des messages
                 if fin > -1:
                     print("------------------------------engorgement des messages------------------------------")
             else:
                 self.close_connection(conn)
-                #print(self.nb)
+                # print(self.nb)
         except ConnectionResetError:
             self.close_connection(conn)
-            #print(self.nb)
+            # print(self.nb)
 
-        
     # Fonction de fonctionnement continu du serveur
     def serve_forever(self):
         last_report_time = time.time()
 
         while True:
-            # Wait until some registered socket becomes ready. This will block
-            # for 0 ms.
+            # Attente qu'un socket enregistré à l'aide de register soit prêt
             events = self.selector.select(timeout=0)
 
-            # For each new event, dispatch to its handler
+            # Pour chaque nouvel événement, envoyez un message à son gestionnaire.
             for key, mask in events:
                 # fait référence à la fonction on_read dans le
                 # self.selector.register(fileobj=conn, events=selectors.EVENT_READ,data=self.on_read)
@@ -215,7 +219,7 @@ class SelectorServer:
                 socket = key.fileobj
                 handler(socket, mask)
 
-            # This part happens roughly every second.
+            # permet d'éxécuter un rapport du nombre d'éléments connecté toutes les 60 secondes
             cur_time = time.time()
             if cur_time - last_report_time > 60:
                 logging.info('Running report...')
@@ -223,24 +227,24 @@ class SelectorServer:
                 """logging.info('Active peers: {0}'.format(self.current_peers))"""
                 last_report_time = cur_time
 
-    def rediriger(self,message,conn):
-        deserialized_message=pickle.loads(message)
+    def rediriger(self, message, conn):
+        deserialized_message = pickle.loads(message)
         if deserialized_message["type"] == 'LOG':
             for numSocket in self._abonnement['LOG']:
                 newConn = self._fileno_to_socket[numSocket]
-                sent = newConn.send(message + self._separator)  # Should be ready to write
-            logging.info('On redirige vers les abonnées LOG de '+str(conn.fileno()))
+                sent = newConn.send(message + self._separator)
+            logging.info('On redirige vers les abonnées LOG de ' + str(conn.fileno()))
         elif deserialized_message["type"] == 'DATA':
             for numSocket in self._abonnement['DATA']:
                 newConn = self._fileno_to_socket[numSocket]
-                sent = newConn.send(message + self._separator)  # Should be ready to write
-            logging.info('On redirige vers les abonnées DATA de '+str(conn.fileno()))
+                sent = newConn.send(message + self._separator)
+            logging.info('On redirige vers les abonnées DATA de ' + str(conn.fileno()))
         elif deserialized_message["type"] == 'CMD':
             if deserialized_message["destinataire"] != '':
                 try:
                     newConn = self._name_to_socket[deserialized_message["destinataire"]]
-                    sent = newConn.send(message + self._separator)  # Should be ready to write
-                    logging.info('On redirige vers les abonnées CMD de '+ str(conn.fileno()))
+                    sent = newConn.send(message + self._separator)
+                    logging.info('On redirige vers les abonnées CMD de ' + str(conn.fileno()))
                 except KeyError:
                     print("IL EST PAS CO")
         else:
@@ -248,6 +252,7 @@ class SelectorServer:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
     logging.info('starting')
     server = SelectorServer(host=HOST, port=PORT)
     server.serve_forever()
