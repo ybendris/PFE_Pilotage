@@ -8,7 +8,7 @@ HOST = 'localhost'
 PORT = 65432
 
 # print améliorer
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(messagee)s')
 
 #class du serveur
 class SelectorServer:

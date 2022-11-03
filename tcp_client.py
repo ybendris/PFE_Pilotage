@@ -9,7 +9,7 @@ import pickle
 HOST = 'localhost'
 PORT = 65432
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(messagee)s')
 
 class SelectorClient:
     def __init__(self, host, port, name):
