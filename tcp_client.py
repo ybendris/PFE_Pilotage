@@ -15,6 +15,7 @@ import socket
 import time
 import random
 import pickle
+from datetime import datetime
 
 #  _________________________________________ CONSTANTES _________________________________________
 HOST = 'localhost'
@@ -24,7 +25,7 @@ PORT = 65432
 class SelectorClient:
     """ Nom de la classe : SelectorClient """
     """ Description : Classe représentant un élément qui se connecte à un serveur pour lui envoyer tous ces messages """
-    def __init__(self, host, port, name):
+    def __init__(self, host, port, name, abo):
         self.name = name
         # Création du socket principal se connectant au serveur
         # Socket AF_INET (IPV4) / Socket STREAM (TCP)
@@ -40,19 +41,21 @@ class SelectorClient:
         self._buffer[self.main_socket.fileno()]="".encode()
         # Création de l'objet sélector qui distribuera les événements.
         self.selector = selectors.DefaultSelector()
-        self.envoi_abonnement()
+        self.envoi_abonnement(abo)
         # Création de l'objet sélector qui distribuera les événements.
         self.selector.register(fileobj=self.main_socket,
                                events=selectors.EVENT_READ | selectors.EVENT_WRITE,
                                data=self.service)
         
 
-    def envoi_abonnement(self):
+    def envoi_abonnement(self, abo):
         conn = self.main_socket
         message = {}
+        message["msg"] = []
         try:
             message["expediteur"] = self.name
-            message["msg"] = ["DATA", "LOG"]
+            for type in abo:
+                message["msg"].append(type)
 
             serialized_message = pickle.dumps(message)
 
@@ -90,7 +93,7 @@ class SelectorClient:
                         #appel obj->receive
                         logging.info('Reçu de: {}.'.format(pickle.loads(recv_data)))
                         #conn.send(data)
-
+                        self.traitement(recv_data)
                         #print('CN/received {}bytes from connection'.format(len(recv_data)), sock.getpeername())
                         #le reste
                         # S'il reste un message incomplet au moment du traitement,
@@ -110,7 +113,8 @@ class SelectorClient:
             print("WRITE")
             message = {}
             try:
-                alea = random.randrange(1, 4)
+                #alea = random.randrange(1, 4)
+                alea = 3
                 logging.info('LA VALEUR RANDOM VAUT : '+ str(alea))
                 if alea == 1:
                     message["type"]="CMD"
@@ -120,8 +124,12 @@ class SelectorClient:
                     message["type"]='DATA'
                     message["msg"] = "Flux DATA"
                 else:
-                    message["type"]='LOG'
-                    message["msg"] = "Flux LOG" #"Flux LOG"
+                    alea2 = random.randrange(0, 8)
+                    dateTime = self.getCurrentDateTime()
+                    message["date/time"] = dateTime
+                    message["type"] = 'LOG'
+                    message["level"] = str(alea2)
+                    message["msg"] = "Message du LOG"
 
                 serialized_message = pickle.dumps(message)
 
@@ -134,19 +142,25 @@ class SelectorClient:
                 del self._buffer[conn]
                 return False
             
-            
+    def traitement(self,message):
+        pass
 
     def serve_forever(self):
         while True:
             # Attente qu'un socket enregistré à l'aide de register soit prêt
             events = self.selector.select(timeout=0)
-            time.sleep(2) #toutes les deux secondes (à changer)
+            time.sleep(0.5) #toutes les deux secondes (à changer)
 
             # Pour chaque nouvel événement, envoyez un message à son gestionnaire.
             for key, mask in events:
                 handler = key.data
                 handler(key.fileobj, mask)
 
+    def getCurrentDateTime(self):
+        currentDate = datetime.now()
+        # dd/mm/YY H:M:S
+        dt = currentDate.strftime("%d-%m-%Y %H:%M:%S")
+        return dt
 
 #  _________________________________________ FONCTIONS GLOBALES _________________________________________
 
@@ -159,5 +173,6 @@ if __name__ == '__main__':
         print(f"Usage: {sys.argv[0]} <name>")
         sys.exit(1)
     name = sys.argv[1]
-    server = SelectorClient(host=HOST, port=PORT, name=name)
+    abonnement = ["DATA"]
+    server = SelectorClient(host=HOST, port=PORT, name=name,abo=abonnement)
     server.serve_forever()

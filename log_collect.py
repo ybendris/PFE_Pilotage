@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 from datetime import datetime
 import pickle
@@ -17,6 +18,11 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 class LogCollector(SelectorClient):
     def __init__(self,host,port,name):
         abo = ["LOG"]
+        try:
+            os.mkdir("CSV_LOG")
+        except FileExistsError:
+            pass
+
         self.fOpen=self.openCSV('CSV_LOG/LOG_{}_{}.csv'.format(SESSION_NAME,dt_string), 'w')
         SelectorClient.__init__(self,host=host,port=port,name=name,abo=abo)
         self.serve_forever()
@@ -24,7 +30,7 @@ class LogCollector(SelectorClient):
     def openCSV(self,file,mode):
         if mode == 'w':
             fopen = open(file,mode,newline='')
-            self.writer=csv.DictWriter(fopen,fieldnames=header,delimiter=';')
+            self.writer=csv.DictWriter(fopen,fieldnames=header)
             #self.ecrireCSV(fopen,header)
             self.writer.writeheader()
             return fopen
@@ -65,10 +71,4 @@ if __name__ == '__main__':
     name = sys.argv[1]
     SESSION_NAME = sys.argv[2]
     getDateTimeBegin()
-    # datetime object containing current date and time
-
-    '''
-    server = SelectorClient(host=HOST, port=PORT, name=name)
-    server.serve_forever()
-    '''
     logCollect = LogCollector(HOST,PORT,name)
