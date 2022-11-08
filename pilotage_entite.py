@@ -44,7 +44,11 @@ class EntitePilotage(NetworkItem):
 
         NetworkItem.__init__(self, self.main_socket, self.abonnement)
 
-        self.service()
+        try:
+            self.service()
+        except KeyboardInterrupt:
+            pass
+            #close files
 
     def envoi_abonnement(self):
         print("envoi_abonnement")
@@ -79,7 +83,8 @@ class EntitePilotage(NetworkItem):
         self.queue_message_to_send.put(log)
 
     def service(self):
-        while True:
+        pass
+        """while True:
             try:
                 message = {}
                 alea = random.randrange(2, 4)
@@ -91,7 +96,7 @@ class EntitePilotage(NetworkItem):
                 elif alea == 2:
                     message["type"] = 'DATA'
                     message["expediteur"] = self.name
-                    message["msg"] = {"DATA1":"data1","DATA2":"data2","DATA3":"data3"}
+                    message["msg"] = {"DATA1":"tttttttttttttttttttttttttttttttttttt","DATA2":"data2","DATA3":"data3"}
                 else:
                     niveauLogAlea = random.randrange(0, 8)
                     self.send_log("Message du LOG", niveauLogAlea)
@@ -99,7 +104,7 @@ class EntitePilotage(NetworkItem):
                 self.queue_message_to_send.put(message)
             except KeyboardInterrupt:
                 print("KeyboardInterrupt")
-                break
+                break"""
 
 
 #  ________________________________________________ FONCTIONS GLOBALES _________________________________________________
@@ -113,6 +118,7 @@ if __name__ == '__main__':
     name = sys.argv[1]
     abonnement = []
     server = EntitePilotage(host=HOST, port=PORT, name=name, abonnement=abonnement)
+    # class Superviseur qui hérite de EntitePilotage, qui redef service
 
     server.main_socket.shutdown(socket.SHUT_RDWR)
 

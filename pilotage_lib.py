@@ -67,7 +67,7 @@ class ThreadEcriture(threading.Thread):
 
             except Empty as e:
                 logging.info("{} ended with exception: {}".format(self.name, e))
-                # break
+                break
 
 
 def receive(rfile):

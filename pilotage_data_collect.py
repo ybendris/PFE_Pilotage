@@ -46,17 +46,15 @@ class DataCollect(EntitePilotage):
     def ecrireCSV(self, message):
         origine = message["expediteur"]
         print(origine)
-        a = {"MESSAGE": "test"}
         if origine in self.writers:
             print("existe")
             print(self.fOpens[origine])
             print(self.writers[origine])
-            print(a)
-            self.writers[origine].writerow(a)
+            self.writers[origine].writerow(message["msg"])
         else :
             print("existe pas")
-            #header = list(message["msg"].keys())
-            header=["MESSAGE"]
+            header = list(message["msg"].keys())
+            # header=["MESSAGE"]
             print(type(header))
             self.fOpens[origine] = open('CSV_DATA/DATA_{}_{}_{}.csv'
                                                    .format(SESSION_NAME, origine, dt_string), 'w', newline='')
@@ -64,9 +62,8 @@ class DataCollect(EntitePilotage):
             self.writers[origine] = csv.DictWriter(self.fOpens[origine], fieldnames=header)
             print(self.writers)
             self.writers[origine].writeheader()
-            self.writers[origine].writerow(a)
+            self.writers[origine].writerow(message["msg"])
             print(header)
-            print(a)
 
 
     def service(self):
