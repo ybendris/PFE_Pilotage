@@ -1,9 +1,7 @@
-import json
 import sys
 import os
 import logging
 from datetime import datetime
-import pickle
 import csv
 from pilotage_entite import EntitePilotage
 
@@ -36,28 +34,13 @@ class LogCollector(EntitePilotage):
         if mode == 'w':
             fopen = open(file, mode, newline='')
             self.writer = csv.DictWriter(fopen, fieldnames=header)
-            # self.ecrireCSV(fopen,header)
             self.writer.writeheader()
             return fopen
         else:
             pass
 
-    def ecrireCSV(self, content):
-        self.writer.writerow(content)
-
-
-    """def traitement(self, message):
-        deserialized_message = pickle.loads(message)
-        if deserialized_message["type"] == 'LOG':
-            del deserialized_message["type"]
-            logging.info(deserialized_message)
-            self.ecrireCSV(deserialized_message)
-
-        elif deserialized_message["type"] == 'CMD':
-            pass
-
-        else:
-            logging.info('\n############# Type de message inconnu #############\n')"""
+    def ecrireCSV(self, message):
+        self.writer.writerow(message)
 
     def service(self):
         print("service")

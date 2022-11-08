@@ -81,9 +81,8 @@ class EntitePilotage(NetworkItem):
     def service(self):
         while True:
             try:
-
                 message = {}
-                alea = random.randrange(1, 4)
+                alea = random.randrange(2, 4)
                 logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
                     message["type"] = "CMD"
@@ -91,7 +90,8 @@ class EntitePilotage(NetworkItem):
                     message["msg"] = "Flux CMD"
                 elif alea == 2:
                     message["type"] = 'DATA'
-                    message["msg"] = "Flux DATA"
+                    message["expediteur"] = self.name
+                    message["msg"] = {"DATA1":"data1","DATA2":"data2","DATA3":"data3"}
                 else:
                     niveauLogAlea = random.randrange(0, 8)
                     self.send_log("Message du LOG", niveauLogAlea)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         print(f"Usage: {sys.argv[0]} <name>")
         sys.exit(1)
     name = sys.argv[1]
-    abonnement = ["DATA"]
+    abonnement = []
     server = EntitePilotage(host=HOST, port=PORT, name=name, abonnement=abonnement)
 
     server.main_socket.shutdown(socket.SHUT_RDWR)
