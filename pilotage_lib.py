@@ -13,10 +13,10 @@ class NetworkItem():
         self.rfile = self.main_socket.makefile("rb", -1)
         self.abonnement = abonnement
 
-        self.envoi_abonnement()
-
         self.queue_message_to_send = Queue()
         self.queue_message_to_process = Queue()
+
+        self.envoi_abonnement()
 
         self.write_thread = ThreadEcriture(self.wfile, "ThreadEcriture", self.queue_message_to_send)
         self.write_thread.start()

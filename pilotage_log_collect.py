@@ -1,9 +1,8 @@
 import sys
 import os
 import logging
-from datetime import datetime
 import csv
-from pilotage_entite import EntitePilotage
+from pilotage_entite import EntitePilotage, getBeginDateTime
 
 HOST = 'localhost'
 PORT = 65432
@@ -54,17 +53,6 @@ class LogCollector(EntitePilotage):
 
 
 
-def getDateTimeBegin():
-    a = datetime.now()
-    print("DATE =", a)
-    # dd/mm/YY H:M:S
-    global dt_string
-    dt_string = a.strftime("%d-%m-%Y_%H-%M-%S")
-    print("date and time =", dt_string)
-
-
-
-
 if __name__ == '__main__':
     logging.info('starting')
     if len(sys.argv) != 3:
@@ -72,6 +60,6 @@ if __name__ == '__main__':
         sys.exit(1)
     name = sys.argv[1]
     SESSION_NAME = sys.argv[2]
-    getDateTimeBegin()
+    getBeginDateTime()
     abonnement = ["LOG"]
     logCollect = LogCollector(HOST, PORT, name, abonnement)

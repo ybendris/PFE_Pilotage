@@ -52,6 +52,7 @@ class EntitePilotage(NetworkItem):
 
     def envoi_abonnement(self):
         print("envoi_abonnement")
+        self.send_log("envoi_abonnement",2)
         message = {}
         print(message)
         try:
@@ -74,6 +75,7 @@ class EntitePilotage(NetworkItem):
         dt = currentDate.strftime("%d-%m-%Y %H:%M:%S")
         return dt
 
+
     def send_log(self, message, level):
         log = {}
         log["type"] = 'LOG'
@@ -84,31 +86,17 @@ class EntitePilotage(NetworkItem):
 
     def service(self):
         pass
-        """while True:
-            try:
-                message = {}
-                alea = random.randrange(2, 4)
-                logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
-                if alea == 1:
-                    message["type"] = "CMD"
-                    message["destinataire"] = "CAP"
-                    message["msg"] = "Flux CMD"
-                elif alea == 2:
-                    message["type"] = 'DATA'
-                    message["expediteur"] = self.name
-                    message["msg"] = {"DATA1":"tttttttttttttttttttttttttttttttttttt","DATA2":"data2","DATA3":"data3"}
-                else:
-                    niveauLogAlea = random.randrange(0, 8)
-                    self.send_log("Message du LOG", niveauLogAlea)
 
-                self.queue_message_to_send.put(message)
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt")
-                break"""
 
 
 #  ________________________________________________ FONCTIONS GLOBALES _________________________________________________
-
+def getBeginDateTime():
+    a = datetime.now()
+    print("DATE =", a)
+    # dd/mm/YY H:M:S
+    global dt_string
+    dt_string = a.strftime("%d-%m-%Y_%H-%M-%S")
+    print("date and time =", dt_string)
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
