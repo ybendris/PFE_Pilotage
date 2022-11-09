@@ -42,6 +42,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         logging.info("Serviced Started")
         abonnements_dict = self.receive()
         logging.info("abonnement de {} : {}".format(abonnements_dict["expediteur"], abonnements_dict))
+        logging.info("name to fillno {} ".format(self.server.name_to_fillno))
         self.setAbonnements(self.connection, abonnements_dict)
         self.setSocketWriter()
 
@@ -105,6 +106,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         super().finish()
 
     def setAbonnements(self, connection, abonnement_dict):
+        self.server.name_to_fillno[abonnement_dict["expediteur"]]=connection.fileno()
         for type in abonnement_dict['msg']:
             self.server.setAbonnements(connection.fileno(), type)
 
@@ -131,7 +133,8 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.daemon_threads = True
         self.current_peers = []
         self.messageQueue= Queue()
-        self.consumer_thread = threading.Thread(target=self.consumer, daemon=True, args=(self.messageQueue,))
+        self.name_to_fillno = {}
+        self.consumer_thread = threading.Thread(target=self.redirect_message, daemon=True, args=(self.messageQueue,))
         self.consumer_thread.start()
 
     def server_bind(self):
@@ -159,6 +162,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             overridded
         """
         logging.info("Server is listening...")
+        """request_queue_size = nombre de connexion en attente possible"""
         self.socket.listen(self.request_queue_size)
 
     def add_client(self, client_to_add):
@@ -178,7 +182,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         del self._wfile[client_to_delete.fileno()]
 
 
-    def consumer(self, queue):
+    def redirect_message(self, queue):
         print("consumer")
         while True:
             # retrieve an item
@@ -197,13 +201,16 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                 for numSocket in self._abonnement['DATA']:
                     newConn = self._wfile[numSocket].write(bytes_message + b"\n")
             elif deserialized_message["type"] == 'CMD':
-                """if deserialized_message["destinataire"] != '':
+                if deserialized_message["destinataire"] != '':
                     try:
-                        newConn = self._name_to_socket[deserialized_message["destinataire"]]
-                        sent = newConn.send(message + self._separator)
-                        logging.info('On redirige vers les abonnées CMD de ' + str(conn.fileno()))
+                        destinataire = deserialized_message["destinataire"]
+                        fillno = self.name_to_fillno[destinataire]
+                        newConn = self._wfile[fillno].write(bytes_message + b"\n")
+                        logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                     except KeyError:
-                        print("IL EST PAS CO")"""
+                        logging.info("IL EST PAS CO")
+                    except Exception as e:
+                        logging.info(e)
             else:
                 logging.info('Y A PAS DE TYPE')
 
