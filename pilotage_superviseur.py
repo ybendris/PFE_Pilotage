@@ -16,7 +16,7 @@ import random
 import sys
 import socket
 
-from pilotage_entite import EntitePilotage
+from pilotage_lib import NetworkItem
 
 #  ____________________________________________________ CONSTANTES _____________________________________________________
 HOST = 'localhost'
@@ -25,14 +25,22 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 #  _______________________________________________ DEFINITION DE CLASSES _______________________________________________
 
-class Superviseur(EntitePilotage):
+class Superviseur(NetworkItem):
+    def __init__(self, host, port, name, abonnement):
+        NetworkItem.__init__(self, host, port, name, abonnement)
+
+
+
     def service(self):
         print("SERVICE")
+        i = 0
         while True:
+            i+=1
+            print(f"--------------{i}")
             try:
                 message = {}
                 alea = random.randrange(2, 4)
-                logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
+                #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
                     message["type"] = "CMD"
                     message["destinataire"] = "CAP"
@@ -58,7 +66,7 @@ if __name__ == '__main__':
     name = sys.argv[1]
     abonnement = []
     server = Superviseur(host=HOST, port=PORT, name=name, abonnement=abonnement)
-    # class Superviseur qui hérite de EntitePilotage, qui redef service
+    # class Superviseur qui hérite de NetworkItem, qui redef service
 
     server.main_socket.shutdown(socket.SHUT_RDWR)
 

@@ -1,20 +1,29 @@
 import threading
+from datetime import datetime
 from queue import Queue, Empty
 import logging
 import json
+import socket
+import sys
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 
 class NetworkItem():
-    def __init__(self, socket, abonnement):
-        self.main_socket = socket
+    def __init__(self, host, port, name, abonnement):
+        self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.wfile = self.main_socket.makefile("wb", 0)
         self.rfile = self.main_socket.makefile("rb", -1)
         self.abonnement = abonnement
+        self.name = name
 
         self.queue_message_to_send = Queue()
         self.queue_message_to_process = Queue()
+
+        try:
+            self.main_socket.connect((host, port))
+        except TimeoutError:
+            sys.exit(1)
 
         self.envoi_abonnement()
 
@@ -24,8 +33,48 @@ class NetworkItem():
         self.read_thread = ThreadLecture(self.rfile, "ThreadLecture", self.queue_message_to_process)
         self.read_thread.start()
 
+        try:
+            self.service()
+        except KeyboardInterrupt:
+            pass
+            # close files
+
     def envoi_abonnement(self):
+        print("envoi_abonnement")
+        self.send_log("envoi_abonnement", 2)
+        message = {}
+        print(message)
+        try:
+            message["expediteur"] = self.name
+            message["msg"] = self.abonnement
+
+            print(message)
+            send(self.wfile, message)
+
+        except Exception as e:
+            print(e)
+            # self.selector.unregister(conn)
+            """obj.close(sock)"""
+            # del self._buffer[self.main_socket]
+            return False
+
+    def getCurrentDateTime(self):
+        currentDate = datetime.now()
+        # dd/mm/YY H:M:S
+        dt = currentDate.strftime("%d-%m-%Y %H:%M:%S")
+        return dt
+
+    def send_log(self, message, level):
+        log = {}
+        log["type"] = 'LOG'
+        log["date/time"] = self.getCurrentDateTime()
+        log["level"] = level
+        log["msg"] = message
+        self.queue_message_to_send.put(log)
+
+    def service(self):
         pass
+
 
 class ThreadLecture(threading.Thread):
     def __init__(self, rfile, name, queue):
@@ -39,9 +88,9 @@ class ThreadLecture(threading.Thread):
         while True:
 
             try:
-                message_received = receive(self.rfile) #object json
+                message_received = receive(self.rfile)  # object json
                 if message_received:
-                    logging.info("Received: {}".format(message_received))
+                    #logging.info("Received: {}".format(message_received))
                     self.queue_message_to_process.put(message_received)
             except Exception as e:
                 logging.info("{} ended with exception: {}".format(self.name, e))
@@ -62,12 +111,23 @@ class ThreadEcriture(threading.Thread):
 
                 message_to_send = self.queue_message_to_send.get()
                 send(self.wfile, message_to_send)
-                logging.info("Sent: {}".format(message_to_send))
+                #logging.info("Sent: {}".format(message_to_send))
 
 
             except Empty as e:
                 logging.info("{} ended with exception: {}".format(self.name, e))
                 break
+
+
+
+#  ________________________________________________ FONCTIONS GLOBALES _________________________________________________
+def getBeginDateTime():
+    a = datetime.now()
+    print("DATE =", a)
+    # dd/mm/YY H:M:S
+    dt_string = a.strftime("%d-%m-%Y_%H-%M-%S")
+    print("date and time =", dt_string)
+    return dt_string
 
 
 def receive(rfile):
@@ -78,7 +138,7 @@ def receive(rfile):
 
 
 def send(wfile, message):
-    print("send")
+    #print("send")
     if message:
         str_message = json.dumps(message)
         bytes_message = bytes(str_message, encoding="utf-8")

@@ -42,8 +42,9 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         logging.info("Serviced Started")
         abonnements_dict = self.receive()
         logging.info("abonnement de {} : {}".format(abonnements_dict["expediteur"], abonnements_dict))
-        logging.info("name to fillno {} ".format(self.server.name_to_fillno))
+
         self.setAbonnements(self.connection, abonnements_dict)
+        logging.info("name to fillno {} ".format(self.server.name_to_fillno))
         self.setSocketWriter()
 
 
@@ -54,7 +55,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
             try:
                 # logging.info("Will Receive...")
                 message_dict = self.receive()
-                logging.info("Received: {}".format(message_dict))
+                #logging.info("Received: {}".format(message_dict))
                 if not message_dict:
                     break
 
@@ -67,7 +68,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
                     logging.info("coucou")
                     break
 
-                print("+ enqueued message: ", message_dict)
+                #print("+ enqueued message: ", message_dict)
                 self.server.messageQueue.put(message_dict)
             except EOFError:
                 print("EOFError")
@@ -122,6 +123,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
 class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
     socketserver.TCPServer.allow_reuse_address = True
     socketserver.ThreadingMixIn.daemon_threads = True
+
 
     def __init__(self, server_address, request_handler_class):
         socketserver.TCPServer.__init__(self, server_address, request_handler_class)
@@ -189,7 +191,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             # time.sleep(1)
 
             deserialized_message = queue.get()
-            logging.info(f"- dequeued message: {deserialized_message}")
+            #logging.info(f"- dequeued message: {deserialized_message}")
 
             str_message = json.dumps(deserialized_message)
             bytes_message = bytes(str_message, encoding="utf-8")
