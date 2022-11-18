@@ -39,9 +39,11 @@ class NetworkItem():
 
         self.envoi_abonnement()
 
+        #Crée le thread d'écriture
         self.write_thread = ThreadEcriture(self.wfile, "ThreadEcriture", self.queue_message_to_send)
         self.write_thread.start()
 
+        # Crée le thread de lecture
         self.read_thread = ThreadLecture(self.rfile, "ThreadLecture", self.queue_message_to_process)
         self.read_thread.start()
 
@@ -51,6 +53,9 @@ class NetworkItem():
             pass
             # close files
 
+    """
+    Récupère les abonnements d'une entité lorsque celle-ci se connecte au central
+    """
     def envoi_abonnement(self):
         print("envoi_abonnement")
         self.send_log("envoi_abonnement", 2)
@@ -70,12 +75,29 @@ class NetworkItem():
             # del self._buffer[self.main_socket]
             return False
 
+    """
+    Récupère la date et l'heure actuelle
+    
+    Return
+    ------
+    
+    la date et l'heure
+    """
     def getCurrentDateTime(self):
         currentDate = datetime.now()
         # dd/mm/YY H:M:S
+        #On formate la date et l'heure
         dt = currentDate.strftime("%d-%m-%Y %H:%M:%S")
         return dt
 
+    """
+    Fonction d'envoie de log
+    
+    Paramètres
+    ----------
+    message : le message du log
+    level : le niveau du log
+    """
     def send_log(self, message, level):
         log = {}
         log["type"] = 'LOG'
@@ -141,14 +163,27 @@ def getBeginDateTime():
     print("date and time =", dt_string)
     return dt_string
 
+"""
+Fonction de réception de message
 
+Paramètre
+---------
+rfile : fichier de lecture de la socket
+"""
 def receive(rfile):
-    abonnement_encoded = rfile.readline().strip()
-    abonnement_str = abonnement_encoded.decode("utf-8")
-    abonnement_decoded = json.loads(abonnement_str)
-    return abonnement_decoded
+    msg_encoded = rfile.readline().strip()
+    msg_str = msg_encoded.decode("utf-8")
+    msg_decoded = json.loads(msg_str)
+    return msg_decoded
 
+"""
+Fonction d'émission de message
 
+Paramètres
+----------
+wfile : fichier d'écriture de la socket
+message : le message à envoyer
+"""
 def send(wfile, message):
     #print("send")
     if message:

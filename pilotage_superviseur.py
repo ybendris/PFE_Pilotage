@@ -30,7 +30,10 @@ class Superviseur(NetworkItem):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
 
-
+    """
+    Processus principal du superviseur
+    Utilisé pour réalsier des tests
+    """
     def service(self):
         print("SERVICE")
         i = 0

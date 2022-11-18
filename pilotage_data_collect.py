@@ -47,81 +47,72 @@ class DataCollect(NetworkItem):
 
         NetworkItem.__init__(self, host, port, name, abonnement)
 
-    """def openCSV(self, file, mode):
-        if mode == 'w':
-            fopen = open(file, mode, newline='')
-            self.writer = csv.DictWriter(fopen, fieldnames=header)
-            self.writer.writeheader()
-            return fopen
-        else:
-            pass"""
-
     """
-    Create, Open and Write in a CSV file
-    Else open the file and write the message
+    Crée, ouvre et écrit dans un fichier CSV
 
-    Parameters
+    Paramètre
     ----------
-    message : Received log to write in the file
+    message : le message contenant la donnée à écrire dans le fichier CSV
     """
     def ecrireCSV(self, message):
         origine = message["expediteur"]
         print(origine)
 
-        #if the file is already open and have file writer object
+        #si le fichier correspondant à l'entité expéditrice est déjà ouvert
         if origine in self.writers:
             #print("existe")
             #print(self.fOpens[origine])
             #print(self.writers[origine])
             logging.info(f"On écrit: {message['msg']}")
 
-            #Write the message in a CSV file related to the right entity
+            #Écrit la donnée dans le fichier CSV
             self.writers[origine].writerow(message["msg"])
 
-        #Else the file doesn't exist
+        #Si le fichier n'existe pas
         else:
             print("existe pas")
 
-            #Create a header base on the message's keys
+            #Crée un header basé sur les clés du message
             header = list(message["msg"].keys())
             # header=["MESSAGE"]
             #print(type(header))
 
-            #Create and open the file according to the name of the sessionn the entity related, and date/time
+            #Crée et ouvre un fichier correspondant au nom de la session, à l'entité expéditrice de données
+            #et à la date et heure
             self.fOpens[origine] = open('CSV_DATA/DATA_{}_{}_{}.csv'
                                         .format(self.session, origine, self.dt_string), 'w', newline='')
 
             #print(self.fOpens[origine])
-            #Create the file writer file related to the right entity
+            #Crée le file writer object correspondant au fichier de l'entité
             self.writers[origine] = csv.DictWriter(self.fOpens[origine], fieldnames=header)
 
             #print(self.writers)
-            #Write the header at first line of the file
+            #Écrit le header sur la 1er ligne du fichier
             self.writers[origine].writeheader()
             logging.info(f"On écrit: {message['msg']}")
 
-            #Write the message in the CSV file using file writer
+            #Écrit la donnée dans le fichier CSV
             self.writers[origine].writerow(message["msg"])
             #print(header)
 
     """
-    Main process of data_collect
-    Receive data from a specific entity and write them in the related CSV file
+    Processus principal du data_collect
+    Reçoit des messages et écrit les données qu'il reçoit dans des fichers CSV spécifique à chaque entité
     """
     def service(self):
         print("service")
         while True:
-            #Receive a message from the queue
+            #Recupère un message dans sa queue
             deserialized_message = self.queue_message_to_process.get()
             print(f"deserialized_message: {deserialized_message}")
 
-            #if the message is a DATA
+            #si le message est une DATA
             if deserialized_message["type"] == 'DATA':
-                #Remove message's type from the message
+                #Retire le type du message
                 del deserialized_message["type"]
                 logging.info(deserialized_message)
 
-                #Write the data in a CSV file
+                #Écrit la donnée de le bon fichier CSV
                 self.ecrireCSV(deserialized_message)
 
 

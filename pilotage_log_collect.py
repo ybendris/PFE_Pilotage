@@ -29,78 +29,80 @@ class LogCollector(NetworkItem):
 
         #print(f"{host},{port},{name},{abonnement}")
 
-        #session name
+        #Nom de la session
         self.session = session
-        #Date and hour of launch
+        #Date et heure de lancement du log_collect
         self.dt_string = dt_string
 
         try:
-            #Create CSV_LOG directory
+            # On crée le répertoire CSV_LOG dans le répertoire courant, s'il n'existe pas
             os.mkdir("CSV_LOG")
         except FileExistsError:
             pass
+        #On crée et ouvre le fichier CSV, où les logs sont stockés
+        #Le fichier est nommé selon le nom de la session et de la date et l'heure de lancement du log_collect
         self.fOpen = self.openCSV('CSV_LOG/LOG_{}_{}.csv'.format(self.session, self.dt_string), 'w')
         NetworkItem.__init__(self, host, port, name, abonnement)
-        # On crée le répertoire CSV_LOG, s'il n'existe pas
+
 
     """
-    Open a CSV file
+    Ouvrir un fichier CSV
     
-    Parameters
+    Paramètres
     ----------
-    file : path of the file to open
-    mode : mode in which the file is open. Here always WRITE
+    file : chemin du fichier à ouvrir
+    mode : mode d'ouverture du fichier, ici 'écriture'
     
     Return
     ------
-    A file object
+    Un file object
     """
     def openCSV(self, file, mode):
-        #if file open mode is Write
+        #si le mode d'ouverture est 'écriture'
         if mode == 'w':
-            #open the file
+            #ouvrir le fichier
             fopen = open(file, mode, newline='')
 
-            #Create file writer object
+            #Créer le file writer object
             self.writer = csv.DictWriter(fopen, fieldnames=header)
 
-            #Write header in at the beginning of the file
+            #Écrire le header sur la première ligne du fichier
             self.writer.writeheader()
             return fopen
         else:
             pass
 
     """
-    Write in a CSV file
+    Écrire dans un fichier CSV
 
-    Parameters
+    Paramètre
     ----------
-    message : Received log to write in the file
+    message : le message reçu contenant le log à enregistrer 
     """
     def ecrireCSV(self, message):
         logging.info(f"On écrit: {message} sur {self.writer}")
-        #Write the message using the Writer file object
+        #Écrire le message dans le fichier
         self.writer.writerow(message)
 
     """
-    Main process of log_collect
-    Receive log and write them in a CSV file
+    Processus principal du log_collect
+    Reçoit des messages et écrit les logs dans un fichier CSV
     """
     def service(self):
         print("service")
         while True:
-            #Receive a message from the queue
+            #Récupère un message dans la queue
             deserialized_message = self.queue_message_to_process.get()
             # print(f"deserialized_message: {deserialized_message}")
 
-            #if the message is a log
+            #si le message est un log
             if deserialized_message["type"] == 'LOG':
 
-                #Remove the type of the message
+                #Retirer le type du message
                 del deserialized_message["type"]
                 # logging.info(deserialized_message)
 
-                #Write log in a CSV file
+                #Écrire le log dans le fichier CSV
                 self.ecrireCSV(deserialized_message)
 
 
