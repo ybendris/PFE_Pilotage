@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+
+""" Nom du module : Librairie"""
+
+""" Description """
+""" Version 1 """
+""" Date : 12/11/2022"""
+""" Auteur : Equipe CEIS """
+""""""
+
+#  _______________________________________________________ IMPORT ______________________________________________________
+
 import threading
 from datetime import datetime
 from queue import Queue, Empty

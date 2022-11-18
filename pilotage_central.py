@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-""" Nom du module : SelectorClient"""
-import time
+""" Nom du module : Centrale"""
 
 """ Description """
 """ Version 2 """
@@ -16,7 +15,6 @@ import pprint
 import socket
 import socketserver
 import threading
-import pickle
 import json
 from queue import Queue
 from pilotage_lib import NetworkItem
