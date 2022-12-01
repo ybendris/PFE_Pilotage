@@ -30,11 +30,6 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         self.queue = server.messageQueue
         socketserver.StreamRequestHandler.__init__(self, request, client_address, server)
 
-
-    def setup(self):
-        # print("setup")
-        super().setup()
-
     def handle(self):
         logging.info("Handle")
         self.server.add_client(self.connection)
@@ -84,14 +79,14 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
                 print(f"Exception {e}")"""
 
     def receive(self):
-        abonnement_encoded = self.rfile.readline().strip()
-        # print(f"abonnement_encoded:  {abonnement_encoded}")
-        abonnement_str = abonnement_encoded.decode("utf-8")
+        message = self.rfile.readline().strip()
+        # print(f"message:  {message}")
+        message_str = message.decode("utf-8")
         # print(f"abonnement_str:  {abonnement_str}")
-        if abonnement_str:
-            abonnement_decoded = json.loads(abonnement_str)
-            # print(f"abonnement_decoded:  {abonnement_decoded}")
-            return abonnement_decoded
+        if message_str:
+            message_decoded = json.loads(message_str)
+            # print(f"abonnement_decoded:  {message_decoded}")
+            return message_decoded
         else:
             return {}
 
@@ -210,7 +205,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                         newConn = self._wfile[fillno].write(bytes_message + b"\n")
                         logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                     except KeyError:
-                        logging.info("IL EST PAS CO")
+                        logging.info("Le client n'est pas connecté")
                     except Exception as e:
                         logging.info(e)
             else:

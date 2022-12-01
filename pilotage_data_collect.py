@@ -35,14 +35,6 @@ class DataCollect(NetworkItem):
 
         NetworkItem.__init__(self, host, port, name, abonnement)
 
-    """def openCSV(self, file, mode):
-        if mode == 'w':
-            fopen = open(file, mode, newline='')
-            self.writer = csv.DictWriter(fopen, fieldnames=header)
-            self.writer.writeheader()
-            return fopen
-        else:
-            pass"""
 
     def ecrireCSV(self, message):
         origine = message["expediteur"]
