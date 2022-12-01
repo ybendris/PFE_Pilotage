@@ -42,7 +42,7 @@ class Superviseur(NetworkItem):
             print(f"--------------{i}")
             try:
                 message = {}
-                alea = random.randrange(2, 4)
+                alea = random.randrange(2, 6)
                 #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
                     message["type"] = "CMD"
@@ -51,7 +51,18 @@ class Superviseur(NetworkItem):
                 elif alea == 2:
                     message["type"] = 'DATA'
                     message["expediteur"] = self.name
+                    message["paquet"] = "BEAT"
                     message["msg"] = {"DATA1":"data1","DATA2":"data2","DATA3":"data3"}
+                elif alea == 3:
+                    message["type"] = 'DATA'
+                    message["expediteur"] = self.name
+                    message["paquet"] = "ADVANCED"
+                    message["msg"] = {"DATA4":"data4","DATA5":"data5","DATA6":"data6"}
+                elif alea == 4:
+                    message["type"] = 'DATA'
+                    message["expediteur"] = self.name
+                    message["paquet"] = "RECONSTRUCTED"
+                    message["msg"] = {"DATA7":"data7","DATA8":"data8","DATA9":"data9"}
                 else:
                     niveauLogAlea = random.randrange(0, 8)
                     self.send_log("Message du LOG", niveauLogAlea)

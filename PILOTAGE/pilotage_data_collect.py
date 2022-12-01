@@ -39,7 +39,7 @@ class DataCollect(NetworkItem):
 
         # self.fOpen = self.openCSV('CSV_LOG/LOG_{}_{}.csv'.format(SESSION_NAME, dt_string), 'w')
 
-        # clé = expéditeur et valeur = DictWriter
+        # clé = expéditeur_paquet et valeur = DictWriter
         self.writers = {}
 
         # clé = expéditeur et valeur = fichier ouvert
@@ -56,17 +56,20 @@ class DataCollect(NetworkItem):
     """
     def ecrireCSV(self, message):
         origine = message["expediteur"]
-        print(origine)
+        paquet = message["paquet"]
+        separateur = "_"
+        cle = origine + separateur + paquet
+        print(cle)
 
         #si le fichier correspondant à l'entité expéditrice est déjà ouvert
-        if origine in self.writers:
+        if cle in self.writers:
             #print("existe")
-            #print(self.fOpens[origine])
-            #print(self.writers[origine])
+            #print(self.fOpens[cle])
+            #print(self.writers[cle])
             logging.info(f"On écrit: {message['msg']}")
 
             #Écrit la donnée dans le fichier CSV
-            self.writers[origine].writerow(message["msg"])
+            self.writers[cle].writerow(message["msg"])
 
         #Si le fichier n'existe pas
         else:
@@ -79,20 +82,20 @@ class DataCollect(NetworkItem):
 
             #Crée et ouvre un fichier correspondant au nom de la session, à l'entité expéditrice de données
             #et à la date et heure
-            self.fOpens[origine] = open('CSV_DATA/DATA_{}_{}_{}.csv'
-                                        .format(self.session, origine, self.dt_string), 'w', newline='')
+            self.fOpens[cle] = open('CSV_DATA/DATA_{}_{}_{}.csv'
+                                        .format(self.session, cle, self.dt_string), 'w', newline='')
 
-            #print(self.fOpens[origine])
+            #print(self.fOpens[cle])
             #Crée le file writer object correspondant au fichier de l'entité
-            self.writers[origine] = csv.DictWriter(self.fOpens[origine], fieldnames=header)
+            self.writers[cle] = csv.DictWriter(self.fOpens[cle], fieldnames=header)
 
             #print(self.writers)
             #Écrit le header sur la 1er ligne du fichier
-            self.writers[origine].writeheader()
+            self.writers[cle].writeheader()
             logging.info(f"On écrit: {message['msg']}")
 
             #Écrit la donnée dans le fichier CSV
-            self.writers[origine].writerow(message["msg"])
+            self.writers[cle].writerow(message["msg"])
             #print(header)
 
     """
