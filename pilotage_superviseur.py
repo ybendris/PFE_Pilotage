@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 
-""" Nom du module : SelectorClient"""
+""" Nom du module : Superviseur"""
 
 """ Description """
 """ Version 1 """
-""" Date : 12/11/2022"""
+""" Date : 10/11/2022"""
 """ Auteur : Equipe CEIS """
 """"""
 
@@ -30,7 +30,10 @@ class Superviseur(NetworkItem):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
 
-
+    """
+    Processus principal du superviseur
+    Utilisé pour réalsier des tests
+    """
     def service(self):
         print("SERVICE")
         i = 0

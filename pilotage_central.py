@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-""" Nom du module : SelectorClient"""
-import time
+""" Nom du module : Centrale"""
 
 """ Description """
 """ Version 2 """
@@ -16,7 +15,6 @@ import pprint
 import socket
 import socketserver
 import threading
-import pickle
 import json
 from queue import Queue
 from pilotage_lib import NetworkItem
@@ -78,6 +76,9 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
             except Exception as e:
                 print(f"Exception {e}")"""
 
+    """
+    Fonction de réception de message
+    """
     def receive(self):
         message = self.rfile.readline().strip()
         # print(f"message:  {message}")
@@ -87,9 +88,24 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
             message_decoded = json.loads(message_str)
             # print(f"abonnement_decoded:  {message_decoded}")
             return message_decoded
+        msg_encoded = self.rfile.readline().strip()
+        # print(f"msg_encoded:  {msg_encoded}")
+        msg_str = msg_encoded.decode("utf-8")
+        # print(f"msg_str:  {msg_str}")
+        if msg_str:
+            msg_decoded = json.loads(msg_str)
+            # print(f"msg_decoded:  {msg_decoded}")
+            return msg_decoded
         else:
             return {}
 
+    """
+    Fonction d'émission de message
+
+    Paramètres
+    ----------
+    message : le message à envoyer
+    """
     def send(self, message):
         str_message = json.dumps(message)
         bytes_message = bytes(str_message, encoding="utf-8")
@@ -144,13 +160,22 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         logging.info("Socket binded")
         self.server_address = self.socket.getsockname()
 
+    """
+    Enregistre les abonnements d'une entité
+    """
     def setAbonnements(self, fillno, type):
         self._abonnement[type].append(fillno)
 
+    """
+    Enregistre le file writer de l'entité qui s'est connectée
+    """
     def setWFile(self, fileno, wfile):
         self._wfile[fileno] = wfile
         print(self._wfile)
 
+    """
+    Récupère les abonnements de toutes entités connectées
+    """
     def getAbonnements(self):
         return self._abonnement
 
@@ -179,6 +204,9 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         del self._wfile[client_to_delete.fileno()]
 
 
+    """
+    Redirige les messages que le central reçoit vers les bons destinataires
+    """
     def redirect_message(self, queue):
         print("consumer")
         while True:
@@ -213,28 +241,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
             # process the item in some way
             # ...
-
-            """if deserialized_message["type"] == 'LOG':
-                for numSocket in self._abonnement['LOG']:
-                    newConn = self._fileno_to_socket[numSocket]
-                    sent = newConn.send(message + self._separator)
-                logging.info('On redirige vers les abonnées LOG de ' + str(conn.fileno()))
-            elif deserialized_message["type"] == 'DATA':
-                for numSocket in self._abonnement['DATA']:
-                    newConn = self._fileno_to_socket[numSocket]
-                    sent = newConn.send(message + self._separator)
-                logging.info('On redirige vers les abonnées DATA de ' + str(conn.fileno()))
-            elif deserialized_message["type"] == 'CMD':
-                if deserialized_message["destinataire"] != '':
-                    try:
-                        newConn = self._name_to_socket[deserialized_message["destinataire"]]
-                        sent = newConn.send(message + self._separator)
-                        logging.info('On redirige vers les abonnées CMD de ' + str(conn.fileno()))
-                    except KeyError:
-                        print("IL EST PAS CO")
-            else:
-                logging.info('Y A PAS DE TYPE')
-"""
 
     def get_request(self):
         #  Get the request and client address from the socket.overridden.
