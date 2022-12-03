@@ -12,7 +12,7 @@ export class TestComponent implements OnInit {
 
   ngOnInit(): void {
     this.socketService.getData().subscribe(data => {
-      console.log("Data reçus :" + data)
+      console.log("Data reçus :" + JSON.stringify(data))
     })
   }
 

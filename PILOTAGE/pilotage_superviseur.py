@@ -29,7 +29,6 @@ class Superviseur(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
-
     """
     Processus principal du superviseur
     Utilisé pour réalsier des tests
@@ -42,7 +41,7 @@ class Superviseur(NetworkItem):
             print(f"--------------{i}")
             try:
                 message = {}
-                alea = random.randrange(2, 4)
+                alea = random.randrange(2, 3)
                 #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
                     message["type"] = "CMD"

@@ -11,11 +11,12 @@ export class SocketService {
   constructor(private socket: Socket) {
   }
 
-
+  
   getData(){
-    return this.socket.fromEvent("data").pipe(map((data:any) => data))
+    return this.socket.fromEvent("get_data").pipe(map((data:any) => data))
   }
 
+  
 
 
 }
