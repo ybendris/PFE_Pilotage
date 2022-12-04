@@ -44,6 +44,7 @@ class IhmSupervisor(NetworkItem):
     Définie l'api entre la partie IHM et le processus courrant
     """
     def service(self):
+        print("service API Lancé")
 
         @socketio.on('send_command')
         def on_send_command(command, methods=['GET', 'POST']):
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
 
     app = Flask(__name__)
-    socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+    socketio = SocketIO(app, cors_allowed_origins="*")
     CORS(app)
 
     

@@ -21,7 +21,7 @@ def messaging(command, methods=['GET', 'POST']):
     
 
 if __name__ == '__main__':
-    socketio.run(app)    
+    socketio.run(app)   
     socketio.emit('data1', 'DATA1')
     socketio.emit('data2', 'DATA2')
     socketio.emit('data3', 'DATA3')

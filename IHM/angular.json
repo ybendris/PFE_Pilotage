@@ -107,5 +107,8 @@
       }
     }
   },
-  "defaultProject": "socket-app"
+  "defaultProject": "socket-app",
+  "cli": {
+    "analytics": false
+  }
 }
