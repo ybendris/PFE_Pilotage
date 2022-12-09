@@ -78,10 +78,8 @@ class IhmSupervisor(NetworkItem):
 
 if __name__ == '__main__':
     logging.info('starting')
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <name>")
-        sys.exit(1)
-    name = sys.argv[1]
+    
+    name = "IHM"
     abonnement = ["DATA"]
 
 
