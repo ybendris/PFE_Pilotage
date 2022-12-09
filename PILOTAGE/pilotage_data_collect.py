@@ -25,10 +25,11 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 
 class DataCollect(NetworkItem):
-    def __init__(self, host, port, name, abonnement, session, dt_string):
+    def __init__(self, host, port, name, abonnement, dt_string):
         print(f"{host},{port},{name},{abonnement}")
 
-        self.session = session
+        self.session = ""
+
         self.dt_string = dt_string
 
         # On crée le répertoire CSV_DATA, s'il n'existe pas
@@ -46,6 +47,13 @@ class DataCollect(NetworkItem):
         self.fOpens = {}
 
         NetworkItem.__init__(self, host, port, name, abonnement)
+
+
+    def recupererNomSession(self,message):
+        print(message["msg"]["session"])
+        self.session=message["msg"]["session"]
+        print("NOM DE LA SESSION : " + self.session)
+
 
     """
     Crée, ouvre et écrit dans un fichier CSV
@@ -104,28 +112,42 @@ class DataCollect(NetworkItem):
     """
     def service(self):
         print("service")
+        flag_session = False
         while True:
             #Recupère un message dans sa queue
             deserialized_message = self.queue_message_to_process.get()
             print(f"deserialized_message: {deserialized_message}")
 
+            if flag_session == False:
+                if deserialized_message["type"]=="CMD":
+                    if "session" in deserialized_message["msg"]:
+                        print("on recupére le nom de la session")
+                        self.recupererNomSession(deserialized_message)
+                        flag_session = True
+                    else :
+                        pass
+
             #si le message est une DATA
-            if deserialized_message["type"] == 'DATA':
+            if deserialized_message["type"] == 'DATA' and flag_session == True:
                 #Retire le type du message
                 del deserialized_message["type"]
                 logging.info(deserialized_message)
 
                 #Écrit la donnée de le bon fichier CSV
                 self.ecrireCSV(deserialized_message)
+            else :
+                print("\naucun nom de session\n")
+
 
 
 if __name__ == '__main__':
     logging.info('starting')
-    if len(sys.argv) != 3:
+    """if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} <name> <session>")
         sys.exit(1)
-    name = sys.argv[1]
-    SESSION_NAME = sys.argv[2]
+    """
+    name = "DATA_COLLECT" #sys.argv[1]
+    #SESSION_NAME = sys.argv[2]
     dt_string = getBeginDateTime()
     abonnement = ["DATA"]
-    data_collect = DataCollect(HOST, PORT, name, abonnement, SESSION_NAME, dt_string)
+    data_collect = DataCollect(HOST, PORT, name, abonnement, dt_string)

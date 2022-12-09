@@ -14,6 +14,10 @@ export class TestComponent implements OnInit {
     this.socketService.getData().subscribe(data => {
       console.log("Data reçus :" + JSON.stringify(data))
     })
+
+    this.socketService.getLog().subscribe(log => {
+      console.log("Log reçus :" + JSON.stringify(log))
+    })
   }
 
 

@@ -41,12 +41,10 @@ class Superviseur(NetworkItem):
             print(f"--------------{i}")
             try:
                 message = {}
-                alea = random.randrange(2, 3)
+                alea = random.randrange(1,5)
                 #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
-                    message["type"] = "CMD"
-                    message["destinataire"] = "CAP"
-                    message["msg"] = "Flux CMD"
+                    pass
                 elif alea == 2:
                     message["type"] = 'DATA'
                     message["expediteur"] = self.name

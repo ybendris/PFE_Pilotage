@@ -64,7 +64,7 @@ class IhmSupervisor(NetworkItem):
             deserialized_message = self.queue_message_to_process.get()
             print(f"deserialized_message: {deserialized_message}")
 
-            #si le message est un log
+            #si le message est un DATA
             if deserialized_message["type"] == 'DATA':
 
                 #Retirer le type du message
@@ -74,6 +74,16 @@ class IhmSupervisor(NetworkItem):
 
                 self.socketio.emit("get_data",deserialized_message)
                 # logging.info(deserialized_message)"""
+            #si le message est un LOG    
+            elif deserialized_message["type"] == 'LOG':
+
+                #Retirer le type du message
+                del deserialized_message["type"]
+
+                print(deserialized_message)
+
+                self.socketio.emit("get_log",deserialized_message)
+                # logging.info(deserialized_message)"""
 
 
 if __name__ == '__main__':
@@ -81,6 +91,11 @@ if __name__ == '__main__':
     
     name = "IHM"
     abonnement = ["DATA"]
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <name>")
+        sys.exit(1)
+    name = sys.argv[1]
+    abonnement = ["DATA","LOG"]
 
 
     app = Flask(__name__)
