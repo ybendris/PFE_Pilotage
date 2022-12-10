@@ -176,11 +176,9 @@ class LogCollector(NetworkItem):
 
 if __name__ == '__main__':
     logging.info('starting')
-    """if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <name> <session>")
-        sys.exit(1)"""
     name = "LOG_COLLECT" #sys.argv[1]
     #SESSION_NAME = sys.argv[2]
     dt_string = getBeginDateTime()
     abonnement = ["LOG"]
     logCollect = LogCollector(HOST, PORT, name, abonnement, dt_string)
+    logCollect.service()

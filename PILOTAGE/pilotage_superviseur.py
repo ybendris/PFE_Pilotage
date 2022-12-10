@@ -78,6 +78,7 @@ if __name__ == '__main__':
     abonnement = []
     server = Superviseur(host=HOST, port=PORT, name=name, abonnement=abonnement)
     # class Superviseur qui hérite de NetworkItem, qui redef service
+    server.service()
 
     server.main_socket.shutdown(socket.SHUT_RDWR)
 

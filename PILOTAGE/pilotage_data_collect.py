@@ -142,12 +142,8 @@ class DataCollect(NetworkItem):
 
 if __name__ == '__main__':
     logging.info('starting')
-    """if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <name> <session>")
-        sys.exit(1)
-    """
     name = "DATA_COLLECT" #sys.argv[1]
-    #SESSION_NAME = sys.argv[2]
     dt_string = getBeginDateTime()
     abonnement = ["DATA"]
     data_collect = DataCollect(HOST, PORT, name, abonnement, dt_string)
+    data_collect.service()
