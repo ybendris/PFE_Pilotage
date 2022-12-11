@@ -2,11 +2,11 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {SocketService} from "../../services/socket.service";
 
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.scss']
+  selector: 'app-data',
+  templateUrl: './data.component.html',
+  styleUrls: ['./data.component.scss']
 })
-export class TestComponent implements OnInit {
+export class DataComponent implements OnInit {
 
   constructor(public socketService: SocketService) { }
 

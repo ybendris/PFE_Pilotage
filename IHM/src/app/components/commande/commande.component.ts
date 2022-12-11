@@ -12,10 +12,12 @@ export class CommandeComponent implements OnInit {
   commande: Commande
   @Input() sensor: string
   @Input() content: string
+  @Input() sessionName: string
 
   constructor(public command_service: CommandService) { }
 
   ngOnInit(): void {
+    //emit sessionName => send_command ?
   }
 
   sendCommand(){

@@ -1,0 +1,15 @@
+<div class="form">
+  <mat-form-field appearance="fill">
+    <mat-label>Session Name</mat-label>
+    <input matInput [(ngModel)]="sessionName" name="sessionName" required>
+    <mat-error *ngIf="isNameEmpty">Name is required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Description</mat-label>
+    <textarea matInput [(ngModel)]="sessionDescription" name="sessionDescription" required></textarea>
+    <mat-error *ngIf="isDescriptionEmpty">Description is required</mat-error>
+  </mat-form-field>
+
+  <button mat-button [disabled]="!isValid()" (click)="create_session()" routerLink="/IHM" [state]="{name: sessionName, description: sessionDescription}">Create session</button>
+</div>
