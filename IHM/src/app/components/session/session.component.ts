@@ -14,6 +14,9 @@ export class SessionComponent {
     console.log("Description" + this.sessionDescription)
   }
 
+  /*
+  Renvoie true si la variable sessionName est vide, et false sinon.
+   */
   isNameEmpty(){
     if(this.sessionName == ""){
       return true
@@ -21,12 +24,20 @@ export class SessionComponent {
     return false
   }
 
+  /*
+  Renvoie true si la variable sessionDescription est vide, et false sinon.
+   */
+
   isDescriptionEmpty(){
     if(this.sessionDescription == ""){
       return true
     }
     return false
   }
+
+  /*
+  Utilise les fonctions isNameEmpty() et isDescriptionEmpty() pour vérifier si le composant est valide et renvoie true si les deux variables sont non vides, et false sinon.
+   */
 
   isValid(){
     if (this.isNameEmpty() || this.isDescriptionEmpty()){

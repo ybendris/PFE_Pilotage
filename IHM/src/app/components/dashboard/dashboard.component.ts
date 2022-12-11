@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
-  selector: 'app-interface',
-  templateUrl: './interface.component.html',
-  styleUrls: ['./interface.component.scss']
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.scss']
 })
-export class InterfaceComponent {
+export class DashboardComponent {
   sessionName = ''
   sessionDescription = ''
 
