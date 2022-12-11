@@ -104,6 +104,7 @@ class NetworkItem():
         log["date/time"] = self.getCurrentDateTime()
         log["level"] = level
         log["msg"] = message
+        print(log)
         self.queue_message_to_send.put(log)
 
     def service(self):

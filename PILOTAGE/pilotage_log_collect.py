@@ -15,6 +15,8 @@ import os
 import logging
 import csv
 from pilotage_lib import NetworkItem, getBeginDateTime
+import signal
+import time
 
 HOST = 'localhost'
 PORT = 65432
@@ -121,6 +123,8 @@ class LogCollector(NetworkItem):
 
             #Crée un header basé sur les clés du message
             header = list(message.keys())
+             #On sait que l'on a des logs, on supprime la colonne type
+            
             # header=["MESSAGE"]
             #print(type(header))
 
@@ -152,10 +156,15 @@ class LogCollector(NetworkItem):
         while True:
             #Récupère un message dans la queue
             deserialized_message = self.queue_message_to_process.get()
-            # print(f"deserialized_message: {deserialized_message}")
+            print(deserialized_message)
+            if deserialized_message is None:
+                break
+
+            print(f"deserialized_message: {deserialized_message}")
+            message_type = deserialized_message.get("type")
 
             if flag_session == False:
-                if deserialized_message["type"]=="CMD":
+                if message_type=="CMD":
                     if "session" in deserialized_message["msg"]:
                         print("on recupére le nom de la session")
                         self.recupererNomSession(deserialized_message)
@@ -164,15 +173,28 @@ class LogCollector(NetworkItem):
                         pass
 
             #si le message est un log
-            if deserialized_message["type"] == 'LOG' and flag_session == True:
+            if message_type == 'LOG' and flag_session == True:
 
                 #Retirer le type du message
-                del deserialized_message["type"]
+                # del deserialized_message["type"]
                 # logging.info(deserialized_message)
 
                 #Écrire le log dans le fichier CSV
                 self.ecrireCSV(deserialized_message)
 
+            else :
+                print("aucun nom de session, valeur par défaut prise en compte")
+                self.session = "default_session"
+                flag_session = True
+
+
+    def signal_handler(self, signal, frame):
+        # Affiche un message lorsque Ctrl+C est appuyé
+        print("Ctrl+C pressed!")
+        self.queue_message_to_process.put(None)
+        for fopen in self.fOpens:
+            fopen.close()
+        sys.exit(2)
 
 if __name__ == '__main__':
     logging.info('starting')
@@ -181,4 +203,12 @@ if __name__ == '__main__':
     dt_string = getBeginDateTime()
     abonnement = ["LOG"]
     logCollect = LogCollector(HOST, PORT, name, abonnement, dt_string)
-    logCollect.service()
+    signal.signal(signal.SIGINT, logCollect.signal_handler)
+    logCollect.serviceInDaemonThread()
+
+    while True:
+        pass
+
+    
+
+    

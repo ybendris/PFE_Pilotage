@@ -10,6 +10,7 @@
 
 #  _______________________________________________________ IMPORT ______________________________________________________
 
+import signal
 import sys
 import os
 import logging
@@ -85,6 +86,7 @@ class DataCollect(NetworkItem):
 
             #Crée un header basé sur les clés du message
             header = list(message["msg"].keys())
+
             # header=["MESSAGE"]
             #print(type(header))
 
@@ -117,9 +119,10 @@ class DataCollect(NetworkItem):
             #Recupère un message dans sa queue
             deserialized_message = self.queue_message_to_process.get()
             print(f"deserialized_message: {deserialized_message}")
+            message_type = deserialized_message.get("type")
 
             if flag_session == False:
-                if deserialized_message["type"]=="CMD":
+                if message_type=="CMD":
                     if "session" in deserialized_message["msg"]:
                         print("on recupére le nom de la session")
                         self.recupererNomSession(deserialized_message)
@@ -128,16 +131,25 @@ class DataCollect(NetworkItem):
                         pass
 
             #si le message est une DATA
-            if deserialized_message["type"] == 'DATA' and flag_session == True:
+            if message_type == 'DATA' and flag_session == True:
                 #Retire le type du message
-                del deserialized_message["type"]
+                #del deserialized_message["type"]
                 logging.info(deserialized_message)
 
                 #Écrit la donnée de le bon fichier CSV
                 self.ecrireCSV(deserialized_message)
             else :
-                print("\naucun nom de session\n")
+                print("aucun nom de session, valeur par défaut prise en compte")
+                self.session = "default_session"
+                flag_session = True
 
+    def signal_handler(self, signal, frame):
+        # Affiche un message lorsque Ctrl+C est appuyé
+        print("Ctrl+C pressed!")
+        self.queue_message_to_process.put(None)
+        for fopen in self.fOpens:
+            fopen.close()
+        sys.exit(2)
 
 
 if __name__ == '__main__':
@@ -146,4 +158,9 @@ if __name__ == '__main__':
     dt_string = getBeginDateTime()
     abonnement = ["DATA"]
     data_collect = DataCollect(HOST, PORT, name, abonnement, dt_string)
-    data_collect.service()
+    signal.signal(signal.SIGINT, data_collect.signal_handler)
+    data_collect.serviceInDaemonThread()
+
+    
+    while True:
+        pass

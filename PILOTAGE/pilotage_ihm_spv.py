@@ -42,9 +42,17 @@ class IhmSupervisor(NetworkItem, Flask):
         self.socketio.on("send_command")(self.on_send_command)
 
 
-    def on_send_command(self, command, methods=['GET', 'POST']):
+    """
+    La fonction on_send_command() est un gestionnaire d'événement enregistré avec Flask-SocketIO. 
+    Elle est appelée lorsqu'un événement "send_command" est reçu via WebSocket.
+    Elle est chargé de transmettre la commande au central 
+    
+    Le paramètre command est un dict
+    """
+    def on_send_command(self, command):
         print('received message: ' + str(command))
-        self.socketio.emit("get_data",command)
+        self.queue_message_to_send.put(command)
+        
 
 
 
@@ -53,25 +61,19 @@ class IhmSupervisor(NetworkItem, Flask):
     Récupère les messages du central et les envoie
     """
     def service(self):
-        print("service API Lancé")
+        logging.info("service API Lancé")
         while True:
-            #Récupère un message dans la queue
-            deserialized_message = self.queue_message_to_process.get()
-            print(f"deserialized_message: {deserialized_message}")
-            #si le message est un DATA
-            if deserialized_message["type"] == 'DATA':
-                #Retirer le type du message
-                del deserialized_message["type"]
-                print(deserialized_message)
+            deserialized_message = self.queue_message_to_process.get() #Récupère un message dans la queue
+
+            message_type = deserialized_message.get("type")
+            #print(f"deserialized_message: {deserialized_message}")
+            if message_type == 'DATA':
                 self.socketio.emit("get_data",deserialized_message)
-                # logging.info(deserialized_message)"""
-            #si le message est un LOG    
+                # logging.info(deserialized_message)
+    
             elif deserialized_message["type"] == 'LOG':
-                #Retirer le type du message
-                del deserialized_message["type"]
-                print(deserialized_message)
                 self.socketio.emit("get_log",deserialized_message)
-                # logging.info(deserialized_message)"""
+                # logging.info(deserialized_message)
         
 
 if __name__ == '__main__':

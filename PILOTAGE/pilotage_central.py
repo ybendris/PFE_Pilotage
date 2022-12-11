@@ -115,6 +115,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         logging.info("finish")
         # print(self.connection)
         self.server.delete_client(self.connection)
+        print(self.server.getAbonnements())
         super().finish()
 
     def setAbonnements(self, connection, abonnement_dict):
@@ -214,34 +215,32 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             # time.sleep(1)
 
             deserialized_message = queue.get()
-            #logging.info(f"- dequeued message: {deserialized_message}")
+            message_type = deserialized_message.get("type")
+
+            logging.info(f"- dequeued message: {deserialized_message}")
 
             str_message = json.dumps(deserialized_message)
             bytes_message = bytes(str_message, encoding="utf-8")
 
-            if deserialized_message["type"] == 'LOG':
-                for numSocket in self._abonnement['LOG']:
-                    newConn = self._wfile[numSocket].write(bytes_message + b"\n")
-            elif deserialized_message["type"] == 'DATA':
-                for numSocket in self._abonnement['DATA']:
-                    newConn = self._wfile[numSocket].write(bytes_message + b"\n")
-            elif deserialized_message["type"] == 'CMD':
+            if message_type == 'LOG' or message_type == 'DATA':
+                for numSocket in self._abonnement[message_type]:
+                    self._wfile[numSocket].write(bytes_message + b"\n")
+            
+            elif message_type == 'CMD':
                 if deserialized_message["destinataire"] != '':
                     try:
                         destinataire = deserialized_message["destinataire"]
                         fillno = self.name_to_fillno[destinataire]
-                        newConn = self._wfile[fillno].write(bytes_message + b"\n")
+                        self._wfile[fillno].write(bytes_message + b"\n")
                         logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                     except KeyError:
                         logging.info("Le client n'est pas connecté")
                     except Exception as e:
                         logging.info(e)
             else:
-                logging.info('Y A PAS DE TYPE')
+                logging.info('Le message envoyé n\'a pas de type')
 
-            # process the item in some way
-            # ...
-
+         
     def get_request(self):
         #  Get the request and client address from the socket.overridden.
 

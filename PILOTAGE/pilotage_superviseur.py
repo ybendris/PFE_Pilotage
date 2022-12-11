@@ -15,6 +15,7 @@ import logging
 import random
 import sys
 import socket
+import time
 
 from pilotage_lib import NetworkItem
 
@@ -36,12 +37,20 @@ class Superviseur(NetworkItem):
     def service(self):
         print("SERVICE")
         i = 0
+        test_message_session = {}
+        test_message_session["type"] = 'CMD'
+        test_message_session["destinataire"] = 'DATA_COLLECT'
+        test_message_session["msg"] = {}
+        test_message_session["msg"]["session"] = "testSessions"
+        self.queue_message_to_send.put(test_message_session)
+
         while True:
+            
             i+=1
-            print(f"--------------{i}")
+            #print(f"--------------{i}")
             try:
                 message = {}
-                alea = random.randrange(1,5)
+                alea = random.randrange(2,6)
                 #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
                 if alea == 1:
                     pass
