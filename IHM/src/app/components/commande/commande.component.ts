@@ -20,8 +20,11 @@ export class CommandeComponent implements OnInit {
     //emit sessionName => send_command ?
   }
 
+  /*
+  sendCommand permet d'envoyer une commande au serveur Flask en utilisant la fonction sendCmd du service CommandService
+  le destinataire et la commande sont des valeurs définis par des input html
+   */
   sendCommand(){
-
     this.commande = {
       to: this.sensor,
       content: this.content

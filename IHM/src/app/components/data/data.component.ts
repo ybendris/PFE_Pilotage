@@ -11,6 +11,10 @@ export class DataComponent implements OnInit {
   constructor(public socketService: SocketService) { }
 
   ngOnInit(): void {
+    /*
+    Le composant s'abonne aux deux fonctions de socketService afin de récupérer et de traiter les données reçus
+     */
+
     this.socketService.getData().subscribe(data => {
       console.log("Data reçus :" + JSON.stringify(data))
     })

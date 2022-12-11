@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import {SessionComponent} from "./components/session/session.component";
-import {InterfaceComponent} from "./components/interface/interface.component";
+import {DashboardComponent} from "./components/dashboard/dashboard.component";
 
 const routes: Routes = [
-  { path: 'IHM', component: InterfaceComponent },
+  { path: 'IHM', component: DashboardComponent },
   { path: '', component: SessionComponent }
 ];
 
