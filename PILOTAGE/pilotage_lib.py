@@ -28,6 +28,7 @@ class NetworkItem():
         self.rfile = self.main_socket.makefile("rb", -1)
         self.abonnement = abonnement
         self.name = name
+        self.actions = self.define_action()
 
         self.queue_message_to_send = Queue()
         self.queue_message_to_process = Queue()
@@ -38,6 +39,8 @@ class NetworkItem():
             sys.exit(1)
 
         self.envoi_abonnement()
+
+        self.envoi_actions()
 
         #Crée le thread d'écriture
         self.write_thread = ThreadEcriture(self.wfile, "ThreadEcriture", self.queue_message_to_send)
@@ -54,7 +57,7 @@ class NetworkItem():
             # close files
 
     """
-    Récupère les abonnements d'une entité lorsque celle-ci se connecte au central
+    Envoie les abonnements d'une entité lorsque celle-ci se connecte au central
     """
     def envoi_abonnement(self):
         print("envoi_abonnement")
@@ -74,6 +77,29 @@ class NetworkItem():
             """obj.close(sock)"""
             # del self._buffer[self.main_socket]
             return False
+
+    """
+    Envoie les actions d'une entité lorsque celle-ci se connecte au central
+    """
+    def envoi_actions(self):
+        print("envoi_actions")
+        self.send_log("envoi_actions", 2)
+        message = {}
+        print(message)
+        try:
+            message["expediteur"] = self.name
+            message["msg"] = self.get_action()
+
+            print(message)
+            send(self.wfile, message)
+
+        except Exception as e:
+            print(e)
+            # self.selector.unregister(conn)
+            """obj.close(sock)"""
+            # del self._buffer[self.main_socket]
+            return False
+
 
     """
     Récupère la date et l'heure actuelle
@@ -110,6 +136,11 @@ class NetworkItem():
     def service(self):
         pass
 
+    def define_action(self):
+        pass
+
+    def get_action(self):
+        pass
 
     """
     Fonction permettant de lancer la fonction de service dans un thread daemon

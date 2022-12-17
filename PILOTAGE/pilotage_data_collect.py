@@ -151,6 +151,17 @@ class DataCollect(NetworkItem):
             fopen.close()
         sys.exit(2)
 
+    def define_action(self):
+        actions = [{"nom":"recupererNomSession","function":self.recupererNomSession}]
+        return actions
+
+    def get_action(self):
+        list_actions = []
+        for action in self.actions:
+            print(action)
+            list_actions.append(action['nom'])
+
+        return list_actions
 
 if __name__ == '__main__':
     logging.info('starting')

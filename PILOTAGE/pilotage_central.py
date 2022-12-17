@@ -38,6 +38,11 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
 
         self.setAbonnements(self.connection, abonnements_dict)
         logging.info("name to fillno {} ".format(self.server.name_to_fillno))
+
+        actions_dict = self.receive()
+        logging.info("actions de {} : {}".format(actions_dict["expediteur"], actions_dict))
+        self.setActions(actions_dict)
+
         self.setSocketWriter()
 
 
@@ -119,12 +124,16 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         super().finish()
 
     def setAbonnements(self, connection, abonnement_dict):
-        self.server.name_to_fillno[abonnement_dict["expediteur"]]=connection.fileno()
+        self.server.name_to_fillno[abonnement_dict["expediteur"]] = connection.fileno()
         for type in abonnement_dict['msg']:
             self.server.setAbonnements(connection.fileno(), type)
 
         print(self.server.getAbonnements())
 
+    def setActions(self, actions_dict):
+        self.server.setActions(actions_dict["expediteur"], actions_dict["msg"])
+
+        print(self.server.getActions())
     def setSocketWriter(self):
         self.server.setWFile(self.connection.fileno(), self.wfile)
 
@@ -143,6 +152,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             'DATA': [],
             'LOG': []
         }
+        self._actions = {}
         self._wfile = {}
         self.daemon_threads = True
         self.current_peers = []
@@ -168,6 +178,12 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self._abonnement[type].append(fillno)
 
     """
+    Enregistre les actions d'une entité
+    """
+    def setActions(self, expediteur, action):
+        self._actions[expediteur]= action
+
+    """
     Enregistre le file writer de l'entité qui s'est connectée
     """
     def setWFile(self, fileno, wfile):
@@ -179,6 +195,12 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """
     def getAbonnements(self):
         return self._abonnement
+
+    """
+    Récupère les actions de toutes entités connectées
+    """
+    def getActions(self):
+        return self._actions
 
     def server_activate(self):
         """Called by constructor to activate the server.
@@ -230,6 +252,13 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                 if deserialized_message["destinataire"] != '':
                     try:
                         destinataire = deserialized_message["destinataire"]
+                        if destinataire == "IHM":
+                            if deserialized_message["msg"] == "recup_action":
+                                deserialized_message["msg"] = self.getActions()
+                            else:
+                                pass
+                        else:
+                            pass
                         fillno = self.name_to_fillno[destinataire]
                         self._wfile[fillno].write(bytes_message + b"\n")
                         logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
@@ -249,6 +278,9 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         conn.setblocking(1)
 
         return conn, address
+
+    def recup_action(self):
+        return self.actions
 
 
 """def printer(queue):

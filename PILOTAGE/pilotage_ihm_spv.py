@@ -54,8 +54,6 @@ class IhmSupervisor(NetworkItem, Flask):
         self.queue_message_to_send.put(command)
         
 
-
-
     """
     fonction principal du ihm_superviseur
     Récupère les messages du central et les envoie
@@ -73,6 +71,10 @@ class IhmSupervisor(NetworkItem, Flask):
     
             elif deserialized_message["type"] == 'LOG':
                 self.socketio.emit("get_log",deserialized_message)
+                # logging.info(deserialized_message)
+
+            elif deserialized_message["type"] == 'CMD':
+                self.socketio.emit("get_cmd", deserialized_message)
                 # logging.info(deserialized_message)
         
 

@@ -32,4 +32,5 @@ export class CommandeComponent implements OnInit {
     console.log(this.commande)
     this.command_service.sendCmd(this.commande)
   }
+
 }
