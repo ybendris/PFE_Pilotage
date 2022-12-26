@@ -30,6 +30,9 @@ class NetworkItem():
         self.name = name
         self.actions = self.define_action()
 
+        self._waitfor = {}
+        self.no_msg = 0
+
         self.queue_message_to_send = Queue()
         self.queue_message_to_process = Queue()
 
@@ -141,6 +144,30 @@ class NetworkItem():
 
     def get_action(self):
         pass
+
+    """
+    Crée un identifiant sous forme de chaine de caractère:
+    Il s'agit d'un nombre entier avec un minimum de 4 chiffres (si le nombre est inférieur à 4 chiffres, il est complété avec des zéros).
+    La valeur de self.no_msg est utilisé pour ce formatage.
+    Le nom self.name est concaté à cette chaine    
+    """
+    def idauto(self):
+        self.no_msg += 1
+        return "{:04d}{}".format(self.no_msg, self.name)
+
+    def send_command(self, destinataire, action, params = []):
+        id = self.idauto()
+        commande = {}
+        commande["type"] = "CMD"
+        commande["action"] = action
+        commande["destinataire"] = destinataire
+        commande["params"] = params
+        return id
+
+    def waitfor(self, id, callback):
+        self._waitfor[id] = {'callback':callback}
+
+
 
     """
     Fonction permettant de lancer la fonction de service dans un thread daemon
