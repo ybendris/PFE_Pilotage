@@ -30,6 +30,16 @@ class Superviseur(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
+    def traiterCommande(self, commande):
+        pass
+
+    def traiterData(self, data):
+        pass
+
+    def traiterLog(self, log):
+        pass
+
+
     """
     Processus principal du superviseur
     Utilisé pour réalsier des tests
@@ -40,12 +50,12 @@ class Superviseur(NetworkItem):
         test_message_session = {}
         test_message_session["type"] = 'CMD'
         test_message_session["destinataire"] = 'DATA_COLLECT'
+        test_message_session["action"] = "setNomSession"
         test_message_session["msg"] = {}
-        test_message_session["msg"]["session"] = "testSessions"
+        test_message_session["msg"]["session"] = "testSessions27"
         self.queue_message_to_send.put(test_message_session)
 
         while True:
-            
             i+=1
             #print(f"--------------{i}")
             try:
@@ -71,11 +81,14 @@ class Superviseur(NetworkItem):
                     message["msg"] = {"DATA7":"data7","DATA8":"data8","DATA9":"data9"}
                 else:
                     niveauLogAlea = random.randrange(0, 8)
-                    self.send_log("Message du LOG", niveauLogAlea)
-                self.queue_message_to_send.put(message)
+                    #self.send_log("Message du LOG", niveauLogAlea)
+                #self.queue_message_to_send.put(message)
             except KeyboardInterrupt:
                 print("KeyboardInterrupt")
                 break
+
+
+
 
 
 #  ________________________________________________________ MAIN _______________________________________________________

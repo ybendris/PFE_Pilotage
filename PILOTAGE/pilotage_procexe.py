@@ -14,13 +14,11 @@
 from functools import partial
 import glob
 import logging
-import queue
-import random
 import sys
 import socket
 import time
 
-from pilotage_lib import NetworkItem
+from pilotage_lib import NetworkItem, kb_func
 
 #  ____________________________________________________ CONSTANTES _____________________________________________________
 HOST = 'localhost'
@@ -34,17 +32,15 @@ Elle permet l’exécution séquentielle de commandes issues de fichiers textes.
 """
 class ProcExec(NetworkItem):
     def __init__(self, host, port, name, abonnement, proc_dir):
-        NetworkItem.__init__(self, host, port, name, abonnement)
-        """Liste des procédures à éxécuter, contient seulement les noms des fichiers"""
+        """Liste des procédures qui sont à éxécuter en mode FIFO, contient seulement les noms des fichiers"""
         self.proc2exec = []
+        """Structure contenant des informations sur la procédure en cours d'éxécution sous forme de dict, None sinon"""
         self.encours = None
+        """Répertoire contenant les fichiers de procédures"""
         self.proc_dir = proc_dir
-        self.proc_list = []
-        self.list_procedures()
-        
-        self.actions_callback = []
-        self.actions_name_list = []
-        self.set_actions()
+        """Liste des fichiers de procédures disponibles dans le répertoire proc_dir"""
+        self.proc_list = self.list_procedures()
+        NetworkItem.__init__(self, host, port, name, abonnement)
 
 
     """
@@ -57,6 +53,27 @@ class ProcExec(NetworkItem):
     """
     def list_procedures(self):
         return glob.glob("proc*.txt", root_dir=self.proc_dir)
+
+    
+    
+    """
+    Fonction définissant les actions du ProcEXE
+
+    Entrée:
+        self (objet courant)
+    Traitement:
+        Pour chaque action dans la liste self.proc_list
+    Sortie:
+        La liste des actions (nom->str et function->callable)
+    """
+    #TODO tester l'envoie et la validité des actions
+    def define_action(self):
+        actions = [{"nom":"stop","function": self.stop}]
+        
+        for proc in self.proc_list:
+            actions.append({"nom":'exe_execproc__{}'.format(proc),"function": partial(self.action_execproc, proc)})
+
+        return actions
 
     """
     Fonction d'exécution de procédure d'action
@@ -181,7 +198,10 @@ class ProcExec(NetworkItem):
                 return {'directive':directive, 'statement':statement}
 
 
-
+    """
+    Lorsque l'on reçoit une réponse qui est attendu, on répond en conséquence,
+    Ici on supprime simple la valeur de "wait" dans "contexte"
+    """
     def answer_statement(self, contexte, *karg):
         print("Réponse reçue", karg)
         if 'wait' in contexte:
@@ -190,91 +210,78 @@ class ProcExec(NetworkItem):
             contexte['position'] += 1
 
     #TODO vérifie que l'on envoit bien les actions
-    def set_actions(self):
+    """def set_actions(self):
         for proc in self.proc_list:
             self.actions_callback.append({"nom":'exe_execproc__{}'.format(proc), "action": partial(self.action_execproc, proc)})
-            self.actions_name_list.append('exe_execproc__{}'.format(proc))
+            self.actions_name_list.append('exe_execproc__{}'.format(proc))"""
+
 
     
-    def traiterMessage(self, message):
-        message_type = message.get("type")
-        if message_type is not None and message_type == "CMD": #On ne traite que les commandes
-            #message
-            pass
+
+    
 
 
-    """
-    Essayer de récupérer un message de la file d'attente. 
-    Cet appel va lever une exception queue.Empty si la file est vide.
-    """
-    def getMessage(self):
-        try:
-            message = self.queue_message_to_process.get(block=False)
-            return message
-        except queue.Empty:
-            #print("Queue empty")
-            return None
+    def traiterCommande(self, commande):
+        commande_id = commande.get("id")
+        commande_action = commande.get("action")
 
-    def get_action_callback(self,message_action):
-        for action_dict in self.actions_callback:
-            if action_dict.get("nom") == message_action:
-                return action_dict.get("action")
+        if commande_id in self._waitfor: #Si c'est une réponse à un message attendu
+            func_callback = self._waitfor[commande_id]["callback"]
+            func_callback()
+        elif commande_action in self.get_action(): 
+            action_callback = self.get_action_callback(commande_action)
+            action_callback(commande) 
+        else:
+            logging.info("Commande non reconnue")
 
 
-    def traiterMessage(self, message):
-        if message is not None and message_type == "CMD": #On ne traite que les commandes
-            message_type = message.get("type")
-            logging.info(f"message reçu :{message}")
-            message_id = message.get("id")
-            message_action = message.get("action")
+    def traiterData(self, data):
+        logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
 
-            if message_id in self._waitfor: #Si c'est une réponse à un message attendu
-                func_callback = self._waitfor[message_id]["callback"]
-                func_callback()
-            elif message_action in self.actions_name_list: #demande d'exécution d'une action
-                action_callback = self.get_action_callback(message_action)
-                pass
+    def traiterLog(self, data):
+        logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
 
-
-            #TODO vérifier 
 
     """
     Processus principal du procExec
     """
     def service(self):
-        #TODO prévoir le kbhit
-        while True:
-            message = self.getMessage()
-            self.traiterMessage(message)
+        logging.info("Service global lancé")
+        keypress = kb_func()		
+        while keypress != 'q' and self.running:			
+            ## les commandes claviers
+            if keypress and keypress == 'a':
+                logging.info("Touche clavier 'a' appuiyée")
+
+            #Réception
+            self.traiterMessage(self.getMessage())
+					
+            
+
+
+            keypress = kb_func()
+        logging.info("Service fini")
             
             
 
             
-
-
-
-def testPartial(message):
-    print(message)
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <name>")
-        sys.exit(1)
-    name = sys.argv[1]
+    name = "PROCEXE"
     abonnement = []
 
    
-    server = ProcExec(host=HOST, port=PORT, name=name, abonnement=abonnement, proc_dir="./Procedures/")
+    proc_exe = ProcExec(host=HOST, port=PORT, name=name, abonnement=abonnement, proc_dir="./Procedures/")
     # class Superviseur qui hérite de NetworkItem, qui redef service
-    server.service()
+    proc_exe.service()
 
-    server.main_socket.shutdown(socket.SHUT_RDWR)
+    proc_exe.main_socket.shutdown(socket.SHUT_RDWR)
 
     # server.write_thread.join()
-    logging.info("{} joined ended with main thread".format(server.write_thread.name))
+    logging.info("{} joined ended with main thread".format(proc_exe.write_thread.name))
 
     # server.read_thread.join()
-    logging.info("{} joined ended with main thread".format(server.read_thread.name))
+    logging.info("{} joined ended with main thread".format(proc_exe.read_thread.name))
 
     # server.serve_forever()

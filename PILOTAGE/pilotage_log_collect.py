@@ -14,7 +14,7 @@ import sys
 import os
 import logging
 import csv
-from pilotage_lib import NetworkItem, getBeginDateTime
+from pilotage_lib import NetworkItem, getBeginDateTime, kb_func
 import signal
 import time
 
@@ -28,9 +28,6 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 class LogCollector(NetworkItem):
     def __init__(self, host, port, name, abonnement, dt_string):
-
-        #print(f"{host},{port},{name},{abonnement}")
-
         #Nom de la session
         self.session = ""
         #Date et heure de lancement du log_collect
@@ -54,7 +51,7 @@ class LogCollector(NetworkItem):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
 
-    def recupererNomSession(self,message):
+    def setNomSession(self, message):
         print(message["msg"]["session"])
         self.session=message["msg"]["session"]
         print("NOM DE LA SESSION : " + self.session)
@@ -151,62 +148,44 @@ class LogCollector(NetworkItem):
     Reçoit des messages et écrit les logs dans un fichier CSV
     """
     def service(self):
-        print("service")
-        flag_session = False
-        while True:
-            #Récupère un message dans la queue
-            deserialized_message = self.queue_message_to_process.get()
-            print(deserialized_message)
-            if deserialized_message is None:
-                break
+        logging.info("Service global lancé")
+        keypress = kb_func()		
+        while keypress != 'q' and self.running:			
+            ## les commandes claviers
+            if keypress and keypress == 'a':
+                logging.info("Touche clavier 'a' appuiyée")
+                logging.info(f"Le nom de la session est {self.session}")
 
-            print(f"deserialized_message: {deserialized_message}")
-            message_type = deserialized_message.get("type")
+            #Réception
+            self.traiterMessage(self.getMessage())
 
-            if flag_session == False:
-                if message_type=="CMD":
-                    if "session" in deserialized_message["msg"]:
-                        print("on recupére le nom de la session")
-                        self.recupererNomSession(deserialized_message)
-                        flag_session = True
-                    else :
-                        pass
+            keypress = kb_func()
 
-            #si le message est un log
-            if message_type == 'LOG' and flag_session == True:
-
-                #Retirer le type du message
-                # del deserialized_message["type"]
-                # logging.info(deserialized_message)
-
-                #Écrire le log dans le fichier CSV
-                self.ecrireCSV(deserialized_message)
-
-            else :
-                print("aucun nom de session, valeur par défaut prise en compte")
-                self.session = "default_session"
-                flag_session = True
-
-
-    def signal_handler(self, signal, frame):
-        # Affiche un message lorsque Ctrl+C est appuyé
-        print("Ctrl+C pressed!")
-        self.queue_message_to_process.put(None)
-        for fopen in self.fOpens:
+        logging.info("Service fini")
+        self.queue_message_to_process.put(None) #Envoie d'un message None pour arrêter le thread
+        for fopen in self.fOpens: #Fermeture propre des fichiers
             fopen.close()
-        sys.exit(2)
+
+
+    def traiterData(self, data):
+        logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
+
+    def traiterLog(self, log):
+        if self.session:
+            logging.info(log)
+            #Écrit la donnée de le bon fichier des logs de la session
+            self.ecrireCSV(log)
+        else :
+            print("aucun nom de session, valeur par défaut prise en compte")
+            self.session = "default_session"
+
 
     def define_action(self):
-        actions = [{"nom":"recupererNomSession","function":self.recupererNomSession}]
+        actions = [
+            {"nom":"setNomSession","function": self.setNomSession},
+            {"nom":"stop","function": self.stop}
+        ]
         return actions
-
-    def get_action(self):
-        list_actions = []
-        for action in self.actions:
-            print(action)
-            list_actions.append(action['nom'])
-
-        return list_actions
 
 if __name__ == '__main__':
     logging.info('starting')
@@ -215,12 +194,7 @@ if __name__ == '__main__':
     dt_string = getBeginDateTime()
     abonnement = ["LOG"]
     logCollect = LogCollector(HOST, PORT, name, abonnement, dt_string)
-    signal.signal(signal.SIGINT, logCollect.signal_handler)
-    logCollect.serviceInDaemonThread()
-
-    while True:
-        pass
-
+    logCollect.service()
     
 
     
