@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
-""" Nom du module : Superviseur"""
+""" Nom du module : TestSendCommand"""
 
 """ Description """
 """ Version 1 """
-""" Date : 10/11/2022"""
-""" Auteur : Equipe CEIS """
+""" Date : 28/12/2022"""
+""" Auteur : Yannis """
 """"""
 
 #  _______________________________________________________ IMPORT ______________________________________________________
@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 #  _______________________________________________ DEFINITION DE CLASSES _______________________________________________
 
-class Superviseur(NetworkItem):
+class TestSendCommand(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
@@ -39,9 +39,10 @@ class Superviseur(NetworkItem):
     def traiterLog(self, log):
         pass
 
-    
+
+
     """
-    Processus principal du Superviseur de test
+    Processus principal du TestSendCommand
     """
     def service(self):
         logging.info("Service global lancé")
@@ -52,47 +53,36 @@ class Superviseur(NetworkItem):
                 logging.info("Touche clavier 'a' appuyée")
                 self.send_cmd(destinataire='PROCEXEC', action="stop")
 
-            self.envoie_test()
+            if keypress and keypress == 'z':
+                logging.info("Touche clavier 'z' appuyée")
+                self.send_cmd(destinataire='DATA_COLLECT', action="stop")
+
+            if keypress and keypress == 'e':
+                logging.info("Touche clavier 'e' appuyée")
+                self.send_cmd(destinataire='LOG_COLLECT', action="stop")
 
             #Réception
-            self.traiterMessage(self.getMessage())		
+            self.traiterMessage(self.getMessage())
+					
                     
             keypress = kb_func()
         logging.info("Service fini")
 
-    
-    def envoie_test(self):
-        alea = random.randrange(1,6)
-        #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
-        if alea == 1:
-            pass
-        elif alea == 2:
-            self.send_data(expediteur= self.name, paquet = "BEAT", dict_message={"DATA1":"data1","DATA2":"data2","DATA3":"data3"})
-        elif alea == 3:
-            self.send_data(expediteur= self.name, paquet = "ADVANCED", dict_message={"DATA4":"data4","DATA5":"data5","DATA6":"data6"})
-        elif alea == 4:
-            self.send_data(expediteur= self.name, paquet = "RECONSTRUCTED", dict_message={"DATA7":"data7","DATA8":"data8","DATA9":"data9"})
-        else:
-            niveauLogAlea = random.randrange(0, 8)
-            self.send_log("Message du LOG", niveauLogAlea)
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <name>")
-        sys.exit(1)
-    name = sys.argv[1]
+    name = "TestSendCommand"
     abonnement = []
-    server = Superviseur(host=HOST, port=PORT, name=name, abonnement=abonnement)
-    # class Superviseur qui hérite de NetworkItem, qui redef service
-    server.service()
+    test = TestSendCommand(host=HOST, port=PORT, name=name, abonnement=abonnement)
+    # class TestSendCommand qui hérite de NetworkItem, qui redef service
+    test.service()
 
-    server.main_socket.shutdown(socket.SHUT_RDWR)
+    test.main_socket.shutdown(socket.SHUT_RDWR)
 
     # server.write_thread.join()
-    logging.info("{} joined ended with main thread".format(server.write_thread.name))
+    logging.info("{} joined ended with main thread".format(test.write_thread.name))
 
     # server.read_thread.join()
-    logging.info("{} joined ended with main thread".format(server.read_thread.name))
+    logging.info("{} joined ended with main thread".format(test.read_thread.name))
 
     # server.serve_forever()

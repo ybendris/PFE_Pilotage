@@ -155,7 +155,8 @@ class ProcExec(NetworkItem):
                     position_index += 1
                 else:
                     #on demande l'execution au service via une commande
-                    self.send_command(destinataire= statement['srv'], action = statement['action'], params = statement['params'])
+
+                    self.send_cmd(destinataire= statement['srv'], action = statement['action'], params = statement['params'])
                     #self.ask_action(statement['srv'], statement['action'], statement['params'])
                     position_index += 1
             elif statement['directive']=='wait':
@@ -166,7 +167,7 @@ class ProcExec(NetworkItem):
                 else:
                     #on demande l'execution au service
                     contexte['wait'] = statement
-                    self.waitfor(id=self.send_command(destinataire= statement['srv'], action = statement['action'], params = statement['params']), callback=partial(self.answer_statement, contexte))
+                    self.waitfor(id=self.send_cmd(destinataire= statement['srv'], action = statement['action'], params = statement['params']), callback=partial(self.answer_statement, contexte))
                
         if statements_list and position_index >= nb_statements:
             #Log.send("EXECUTION OVER", level=2, direction="PROC")
@@ -209,18 +210,6 @@ class ProcExec(NetworkItem):
             del contexte['wait']
             contexte['position'] += 1
 
-    #TODO vérifie que l'on envoit bien les actions
-    """def set_actions(self):
-        for proc in self.proc_list:
-            self.actions_callback.append({"nom":'exe_execproc__{}'.format(proc), "action": partial(self.action_execproc, proc)})
-            self.actions_name_list.append('exe_execproc__{}'.format(proc))"""
-
-
-    
-
-    
-
-
     def traiterCommande(self, commande):
         commande_id = commande.get("id")
         commande_action = commande.get("action")
@@ -233,7 +222,6 @@ class ProcExec(NetworkItem):
             action_callback(commande) 
         else:
             logging.info("Commande non reconnue")
-
 
     def traiterData(self, data):
         logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
@@ -251,14 +239,12 @@ class ProcExec(NetworkItem):
         while keypress != 'q' and self.running:			
             ## les commandes claviers
             if keypress and keypress == 'a':
-                logging.info("Touche clavier 'a' appuiyée")
+                logging.info("Touche clavier 'a' appuyée")
 
             #Réception
             self.traiterMessage(self.getMessage())
 					
-            
-
-
+                    
             keypress = kb_func()
         logging.info("Service fini")
             
@@ -268,7 +254,7 @@ class ProcExec(NetworkItem):
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    name = "PROCEXE"
+    name = "PROCEXEC"
     abonnement = []
 
    

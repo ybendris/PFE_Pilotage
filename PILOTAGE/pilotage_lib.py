@@ -192,6 +192,41 @@ class NetworkItem(ABC):
         print(log)
         self.queue_message_to_send.put(log)
 
+    """
+    Crée un identifiant sous forme de chaine de caractère:
+    Il s'agit d'un nombre entier avec un minimum de 4 chiffres (si le nombre est inférieur à 4 chiffres, il est complété avec des zéros).
+    La valeur de self.no_msg est utilisé pour ce formatage.
+    Le nom self.name est concaté à cette chaine    
+    """
+    def idauto(self):
+        self.no_msg += 1
+        return "{:04d}{}".format(self.no_msg, self.name)
+
+    def send_cmd(self, destinataire, action, list_params = [], dict_message = {}):
+        id = self.idauto()
+        commande = {}
+        commande["type"] = "CMD"
+        commande["action"] = action
+        commande["destinataire"] = destinataire
+        commande["params"] = list_params
+        commande["msg"] = dict_message
+
+        print(commande)
+        self.queue_message_to_send.put(commande)
+        return id
+
+    def send_data(self, expediteur, paquet, msg):
+        data = {}
+        data["type"] = 'DATA'
+        data["expediteur"] = expediteur
+        data["paquet"] = paquet
+        data["msg"] = msg
+        print(data)
+        self.queue_message_to_send.put(data)
+
+    def waitfor(self, id, callback):
+        self._waitfor[id] = {'callback':callback}
+    
 
     """
     Cette fonction est redéfini pour chaque processus
@@ -226,30 +261,10 @@ class NetworkItem(ABC):
                 return action_dict.get("function")
 
 
-    """
-    Crée un identifiant sous forme de chaine de caractère:
-    Il s'agit d'un nombre entier avec un minimum de 4 chiffres (si le nombre est inférieur à 4 chiffres, il est complété avec des zéros).
-    La valeur de self.no_msg est utilisé pour ce formatage.
-    Le nom self.name est concaté à cette chaine    
-    """
-    def idauto(self):
-        self.no_msg += 1
-        return "{:04d}{}".format(self.no_msg, self.name)
-
-    def send_command(self, destinataire, action, params = []):
-        id = self.idauto()
-        commande = {}
-        commande["type"] = "CMD"
-        commande["action"] = action
-        commande["destinataire"] = destinataire
-        commande["params"] = params
-        return id
-
-    def waitfor(self, id, callback):
-        self._waitfor[id] = {'callback':callback}
+    
 
 
-    def stop(self):
+    def stop(self, commande):
         self.running = False
 
     """
