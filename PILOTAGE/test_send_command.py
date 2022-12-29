@@ -30,8 +30,7 @@ class TestSendCommand(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
-    def traiterCommande(self, commande):
-        pass
+    
 
     def traiterData(self, data):
         pass
@@ -39,7 +38,34 @@ class TestSendCommand(NetworkItem):
     def traiterLog(self, log):
         pass
 
+    """
+    Fonction définissant les actions de la classe
+    """
+    def define_action(self):
+        actions = [
+            {"nom":"stop","function": self.stop},
+            {"nom":"print_list","function": self.print_list},
+            {"nom":"print_dict","function": self.print_dict},
+            {"nom":"print_else","function": self.print_else}
+        ]
 
+        return actions
+
+    def print_list(self, list):
+        logging.info("print_list début")
+        print(list["params"])
+        logging.info("print_list fin")
+
+    def print_dict(self, dict):
+        logging.info("print_dict début")
+        print(dict)
+        logging.info("print_dict fin")
+    
+    def print_else(self, something):
+        logging.info("print_else début")
+        print(something)
+        time.sleep(2)
+        logging.info("print_else fin")
 
     """
     Processus principal du TestSendCommand
@@ -51,19 +77,40 @@ class TestSendCommand(NetworkItem):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
-                self.send_cmd(destinataire='PROCEXEC', action="stop")
+                self.ask_action(destinataire='PROCEXEC', action="stop")
 
             if keypress and keypress == 'z':
                 logging.info("Touche clavier 'z' appuyée")
-                self.send_cmd(destinataire='DATA_COLLECT', action="stop")
+                self.ask_action(destinataire='DATA_COLLECT', action="stop")
 
             if keypress and keypress == 'e':
                 logging.info("Touche clavier 'e' appuyée")
-                self.send_cmd(destinataire='LOG_COLLECT', action="stop")
+                self.ask_action(destinataire='LOG_COLLECT', action="stop")
 
-            if keypress and keypress == 'w':
-                logging.info("Touche clavier 'e' appuyée")
-                self.send_cmd(destinataire='LOG_COLLECT', action="stop")
+            if keypress and keypress == 'r':
+                logging.info("Touche clavier 'r' appuyée")
+                self.ask_action(destinataire='LOG_COLLECT', action="stop")
+
+            if keypress and keypress == 't':
+                logging.info("Touche clavier 't' appuyée")
+                self.ask_action(destinataire='TEST2', action="stop")
+
+            if keypress and keypress == 'y':
+                logging.info("Touche clavier 'y' appuyée")
+                self.ask_action(destinataire='TEST2', action="print_list", list_params=["wow"])
+
+            if keypress and keypress == 'u':
+                logging.info("Touche clavier 'u' appuyée")
+                self.ask_action(destinataire='TEST2', action="print_dict")
+
+            if keypress and keypress == 'i':
+                logging.info("Touche clavier 'i' appuyée")
+                self.ask_action(destinataire='TEST2', action="print_else")
+
+            if keypress and keypress == 'o':
+                logging.info("Touche clavier 'o' appuyée")
+                self.waitfor(self.ask_action(destinataire='TEST2', action="print_else"),callback=self.stop)
+                
 
             #Réception
             self.traiterMessage(self.getMessage())
@@ -75,7 +122,10 @@ class TestSendCommand(NetworkItem):
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    name = "TestSendCommand"
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <name>")
+        sys.exit(1)
+    name = sys.argv[1]
     abonnement = []
     test = TestSendCommand(host=HOST, port=PORT, name=name, abonnement=abonnement)
     # class TestSendCommand qui hérite de NetworkItem, qui redef service

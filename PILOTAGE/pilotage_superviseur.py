@@ -41,6 +41,13 @@ class Superviseur(NetworkItem):
 
     
     """
+    Fonction définissant les actions de la classe
+    """
+    def define_action(self):
+        actions = [{"nom":"stop","function": self.stop}]
+        return actions
+    
+    """
     Processus principal du Superviseur de test
     """
     def service(self):

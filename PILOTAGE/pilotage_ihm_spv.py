@@ -41,6 +41,30 @@ class IhmSupervisor(NetworkItem, Flask):
 
         self.socketio.on("send_command")(self.on_send_command)
 
+    """
+    Fonction qui gère la réception de data de la part du central
+    #TODO à compléter
+    """
+    def traiterData(self, data):
+        pass
+
+    """
+    Fonction qui gère la réception de log de la part du central
+    #TODO à compléter
+    """
+    def traiterLog(self, log):
+        pass
+
+    """
+    Fonction définissant les actions de la classe
+    #TODO à compléter
+    """
+    def define_action(self):
+        actions = [
+            {"nom":"stop","function": self.stop},
+        ]
+
+        return actions
 
     """
     La fonction on_send_command() est un gestionnaire d'événement enregistré avec Flask-SocketIO. 
@@ -48,6 +72,7 @@ class IhmSupervisor(NetworkItem, Flask):
     Elle est chargé de transmettre la commande au central 
     
     Le paramètre command est un dict
+    #TODO à compléter avec les nouvelles fonctions send
     """
     def on_send_command(self, command):
         print('received message: ' + str(command))
@@ -57,6 +82,7 @@ class IhmSupervisor(NetworkItem, Flask):
     """
     fonction principal du ihm_superviseur
     Récupère les messages du central et les envoie
+    #TODO à refactoriser
     """
     def service(self):
         logging.info("service API Lancé")
@@ -85,5 +111,6 @@ if __name__ == '__main__':
     abonnement = ["DATA","LOG"]  
     
     app = IhmSupervisor(HOST, PORT, name, abonnement, __name__)
+    #TODO vérifier si l'on a toujour besoin de lancer la fonction service dans un thread à cause du processus run qui est bloquant
     threadService = app.serviceInDaemonThread()
     app.run()

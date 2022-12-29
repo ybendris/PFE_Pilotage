@@ -66,13 +66,11 @@ class ProcExec(NetworkItem):
     Sortie:
         La liste des actions (nom->str et function->callable)
     """
-    #TODO tester l'envoie et la validité des actions
     def define_action(self):
         actions = [{"nom":"stop","function": self.stop}]
         
         for proc in self.proc_list:
             actions.append({"nom":'exe_execproc__{}'.format(proc),"function": partial(self.action_execproc, proc)})
-
         return actions
 
     """
@@ -119,62 +117,66 @@ class ProcExec(NetworkItem):
                 ligne = ligne.strip()  # Supprime les espaces en début et fin de ligne
                 if ligne == '' or ligne.startswith('#'): # Si la ligne est vide ou commence par '#', on l'ignore
                     continue
-            statements.append(ligne) # Sinon, on ajoute la ligne à la liste
+                statements.append(ligne) # Sinon, on ajoute la ligne à la liste
         return statements  # On retourne la liste des lignes valides
 
     def execnextstatement(self):
         contexte = self.encours
-        
-        #Le wait peut être due à deux chose:
-        # Une directive pause: on donne un temps de pause à attendre
-        # Une directive wait: on attend une réponse
-        if 'wait' in contexte:
-            if isinstance(contexte['wait'], float):
-                t = time.perf_counter()
-                if t >= contexte['wait']:
-                    #Log.send("attente terminée".format(t, ctx['wait']), level=3, direction="wait")
-                    del contexte['wait']
-                    contexte['position'] += 1
 
-        position_index = contexte.get("position")
-        statements_list = contexte.get("statements")
-        nb_statements = len(statements_list)
+        if contexte is not None:
+            #Le wait peut être due à deux chose:
+            # Une directive pause: on donne un temps de pause à attendre
+            # Une directive wait: on attend une réponse
+            if contexte.get('wait') and 'wait' in contexte:           
+                if isinstance(contexte['wait'], float):
+                    t = time.perf_counter()
+                    if t >= contexte['wait']:
+                        #Log.send("attente terminée".format(t, ctx['wait']), level=3, direction="wait")
+                        del contexte['wait']
+                        contexte['position'] += 1
 
-        if(position_index < nb_statements):
-            statement = self.analyse_statement(statements_list[position_index])
+            position_index = contexte.get("position")
+            statements_list = contexte.get("statements")
+            if statements_list is not None and position_index is not None:
+                nb_statements = len(statements_list)
 
-            #Log.send(ctx['statements'][ctx['position']], level=3, direction="next")
-            if statement['directive']=='pause':
-                t0 = time.perf_counter()
-                delay = float(statement['statement'])
-                contexte['wait'] = t0+delay
-            elif statement['directive']=='send':
-                if 'srv' not in statement or 'action' not in statement:
-                    #on ne comprend pas, on passe au suivant
-                    #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
-                    position_index += 1
-                else:
-                    #on demande l'execution au service via une commande
+                if(position_index < nb_statements):
+                    statement = self.analyse_statement(statements_list[position_index])
+                    
+                
 
-                    self.send_cmd(destinataire= statement['srv'], action = statement['action'], params = statement['params'])
-                    #self.ask_action(statement['srv'], statement['action'], statement['params'])
-                    position_index += 1
-            elif statement['directive']=='wait':
-                if 'srv' not in statement or 'action' not in statement:
-                    #on ne comprend pas, on passe au suivant
-                    #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
-                    position_index += 1
-                else:
-                    #on demande l'execution au service
-                    contexte['wait'] = statement
-                    self.waitfor(id=self.send_cmd(destinataire= statement['srv'], action = statement['action'], params = statement['params']), callback=partial(self.answer_statement, contexte))
-               
-        if statements_list and position_index >= nb_statements:
-            #Log.send("EXECUTION OVER", level=2, direction="PROC")
-            self.encours = None
-            #on prend la prochaine
-            if self.proc2exec:
-                self.prepare_proc(self.proc2exec.pop(0))
+                    #Log.send(ctx['statements'][ctx['position']], level=3, direction="next")
+                    if statement is not None and statement['directive']=='pause':
+                        t0 = time.perf_counter()
+                        delay = float(statement['statement'])
+                        contexte['wait'] = t0+delay
+                    elif statement is not None and statement['directive']=='send':
+                        if 'srv' not in statement or 'action' not in statement:
+                            #on ne comprend pas, on passe au suivant
+                            #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
+                            position_index += 1
+                        else:
+                            #on demande l'execution au service via une commande
+
+                            self.ask_action(destinataire= statement['srv'], action = statement['action'], list_params = statement['params'])
+                            #self.ask_action(statement['srv'], statement['action'], statement['params'])
+                            position_index += 1
+                    elif statement is not None and statement['directive']=='wait':
+                        if 'srv' not in statement or 'action' not in statement:
+                            #on ne comprend pas, on passe au suivant
+                            #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
+                            position_index += 1
+                        else:
+                            #on demande l'execution au service
+                            contexte['wait'] = statement
+                            self.waitfor(id=self.ask_action(destinataire= statement['srv'], action = statement['action'], list_params= statement['params']), callback=partial(self.answer_statement, contexte))
+                
+                if statements_list and position_index >= nb_statements:
+                    #Log.send("EXECUTION OVER", level=2, direction="PROC")
+                    self.encours = None
+                    #on prend la prochaine
+                    if self.proc2exec:
+                        self.prepare_proc(self.proc2exec.pop(0))
     
     def analyse_statement(self, statement):
         posdirective = statement.find(":")
@@ -210,18 +212,7 @@ class ProcExec(NetworkItem):
             del contexte['wait']
             contexte['position'] += 1
 
-    def traiterCommande(self, commande):
-        commande_id = commande.get("id")
-        commande_action = commande.get("action")
-
-        if commande_id in self._waitfor: #Si c'est une réponse à un message attendu
-            func_callback = self._waitfor[commande_id]["callback"]
-            func_callback()
-        elif commande_action in self.get_action(): 
-            action_callback = self.get_action_callback(commande_action)
-            action_callback(commande) 
-        else:
-            logging.info("Commande non reconnue")
+    
 
     def traiterData(self, data):
         logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
