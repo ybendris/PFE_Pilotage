@@ -215,12 +215,12 @@ class NetworkItem(ABC):
         self.queue_message_to_send.put(commande)
         return id
 
-    def send_data(self, expediteur, paquet, msg):
+    def send_data(self, expediteur, paquet, dict_message):
         data = {}
         data["type"] = 'DATA'
         data["expediteur"] = expediteur
         data["paquet"] = paquet
-        data["msg"] = msg
+        data["msg"] = dict_message
         print(data)
         self.queue_message_to_send.put(data)
 
