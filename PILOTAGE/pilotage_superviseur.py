@@ -48,11 +48,8 @@ class Superviseur(NetworkItem):
         keypress = kb_func()		
         while keypress != 'q' and self.running:			
             ## les commandes claviers
-            if keypress and keypress == 'a':
-                logging.info("Touche clavier 'a' appuyée")
-                self.send_cmd(destinataire='PROCEXEC', action="stop")
-
-            self.envoie_test()
+           
+            self.envoie_data_log_test()
 
             #Réception
             self.traiterMessage(self.getMessage())		
@@ -61,7 +58,7 @@ class Superviseur(NetworkItem):
         logging.info("Service fini")
 
     
-    def envoie_test(self):
+    def envoie_data_log_test(self):
         alea = random.randrange(1,6)
         #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
         if alea == 1:

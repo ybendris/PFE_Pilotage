@@ -61,6 +61,10 @@ class TestSendCommand(NetworkItem):
                 logging.info("Touche clavier 'e' appuyée")
                 self.send_cmd(destinataire='LOG_COLLECT', action="stop")
 
+            if keypress and keypress == 'w':
+                logging.info("Touche clavier 'e' appuyée")
+                self.send_cmd(destinataire='LOG_COLLECT', action="stop")
+
             #Réception
             self.traiterMessage(self.getMessage())
 					
