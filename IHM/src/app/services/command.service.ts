@@ -18,4 +18,18 @@ export class CommandService {
   sendCmd(commandeToSend : Commande){
     this.socket.emit('send_command', commandeToSend);
   }
+
+  /*
+  waitForResponse souscrit à l'événement 'command_response' 
+  envoyé par le serveur Flask et traite la réponse en la transformant en objet Commande.
+  */
+  waitForResponse() {
+    return this.socket.fromEvent<Commande>('command_response').pipe(map(data => {
+      console.log("data"+data)
+      
+    }));
+  }
+
+  
+
 }

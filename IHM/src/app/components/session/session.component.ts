@@ -1,17 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Commande } from 'src/app/models/commande.model';
+import { CommandService } from 'src/app/services/command.service';
 
 @Component({
   selector: 'app-session',
   templateUrl: './session.component.html',
   styleUrls: ['./session.component.scss']
 })
-export class SessionComponent {
+export class SessionComponent implements OnInit {
+  commande: Commande
+  constructor(public command_service: CommandService) { }
+  ngOnInit(): void {
+    //
+  }
   sessionName = ''
   sessionDescription = ''
 
   create_session(){
     console.log("Session Name:" + this.sessionName)
     console.log("Description" + this.sessionDescription)
+    this.commande = {
+      destinataire: "DATA_COLLECT",
+      msg: {"session" : this.sessionName, "description" : this.sessionDescription},
+      action: "setNomSession"
+    }
+    
+    this.command_service.sendCmd(this.commande)
+
+    // Souscrit à l'événement de réponse du serveur Flask et traite la réponse
+    this.command_service.waitForResponse().subscribe(response => {
+      console.log("traitez la réponse ici")
+      console.log(response);
+    });
   }
 
   /*

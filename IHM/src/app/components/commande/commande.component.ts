@@ -18,6 +18,7 @@ export class CommandeComponent implements OnInit {
 
   ngOnInit(): void {
     //emit sessionName => send_command ?
+    //Je l'ai mis dans le component sessions
   }
 
   /*
@@ -26,8 +27,10 @@ export class CommandeComponent implements OnInit {
    */
   sendCommand(){
     this.commande = {
-      to: this.sensor,
-      content: this.content
+      destinataire: this.sensor,
+      action: "TODO",
+      msg: this.content
+
     }
     console.log(this.commande)
     this.command_service.sendCmd(this.commande)

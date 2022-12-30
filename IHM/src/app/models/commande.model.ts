@@ -1,4 +1,5 @@
 export interface Commande {
-    to: string;
-    content: string;
+    destinataire: string;
+    msg: any;
+    action: string
 }
