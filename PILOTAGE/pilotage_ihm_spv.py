@@ -12,7 +12,9 @@ import sys
 import os
 import logging
 import csv
-from pilotage_lib import NetworkItem, getBeginDateTime
+import socket
+from threading import *
+from pilotage_lib import NetworkItem, getBeginDateTime, kb_func
 
 import time
 from flask import Flask, request
@@ -39,21 +41,27 @@ class IhmSupervisor(NetworkItem, Flask):
         # Initialise Flask-SocketIO
         self.socketio = SocketIO(self, cors_allowed_origins="*")
 
+        # On défini les évênement sur lesquels on réagit ainsi que la fonction éxécutée
         self.socketio.on("send_command")(self.on_send_command)
+
+        #Crée le thread daemon lançant le serveur
+        self.thread_application = Thread(target=self.run_server, daemon=True)
+        self.thread_application.start()
+
+    def run_server(self):
+        self.run()
 
     """
     Fonction qui gère la réception de data de la part du central
-    #TODO à compléter
     """
     def traiterData(self, data):
-        pass
+        self.socketio.emit("get_data",data)
 
     """
     Fonction qui gère la réception de log de la part du central
-    #TODO à compléter
     """
     def traiterLog(self, log):
-        pass
+        self.socketio.emit("get_log",log)
 
     """
     Fonction définissant les actions de la classe
@@ -61,7 +69,7 @@ class IhmSupervisor(NetworkItem, Flask):
     """
     def define_action(self):
         actions = [
-            {"nom":"stop","function": self.stop},
+            {"nom":"stop","function": self.stop}
         ]
 
         return actions
@@ -72,37 +80,38 @@ class IhmSupervisor(NetworkItem, Flask):
     Elle est chargé de transmettre la commande au central 
     
     Le paramètre command est un dict
-    #TODO à compléter avec les nouvelles fonctions send
     """
     def on_send_command(self, command):
         print('received message: ' + str(command))
-        self.queue_message_to_send.put(command)
+        print(f'Running in thread {current_thread().name}')
+
+        #TODO à compléter
+        self.waitfor(id=self.ask_action(destinataire= command["destinataire"], action = command["action"], dict_message=command["msg"]), callback=self.test)
         
 
+    def test(self, commande):
+        print("REPONSE")  
+        self.socketio.emit("command_response", commande)
+
     """
-    fonction principal du ihm_superviseur
-    Récupère les messages du central et les envoie
-    #TODO à refactoriser
+    Processus principal du procExec
     """
     def service(self):
-        logging.info("service API Lancé")
-        while True:
-            deserialized_message = self.queue_message_to_process.get() #Récupère un message dans la queue
-
-            message_type = deserialized_message.get("type")
-            #print(f"deserialized_message: {deserialized_message}")
-            if message_type == 'DATA':
-                self.socketio.emit("get_data",deserialized_message)
-                # logging.info(deserialized_message)
-    
-            elif deserialized_message["type"] == 'LOG':
-                self.socketio.emit("get_log",deserialized_message)
-                # logging.info(deserialized_message)
-
-            elif deserialized_message["type"] == 'CMD':
-                self.socketio.emit("get_cmd", deserialized_message)
-                # logging.info(deserialized_message)
         
+        keypress = kb_func()		
+        while keypress != 'q' and self.running:			
+            ## les commandes claviers
+            if keypress and keypress == 'a':
+                logging.info("Touche clavier 'a' appuyée")
+                print(f'Running in thread {current_thread().name}')
+
+            #Réception de la part des messages venant du CENTRAL
+            self.traiterMessage(self.getMessage())
+					
+                    
+            keypress = kb_func()
+        logging.info("Service fini")
+
 
 if __name__ == '__main__':
     logging.info('starting')
@@ -111,6 +120,6 @@ if __name__ == '__main__':
     abonnement = ["DATA","LOG"]  
     
     app = IhmSupervisor(HOST, PORT, name, abonnement, __name__)
-    #TODO vérifier si l'on a toujour besoin de lancer la fonction service dans un thread à cause du processus run qui est bloquant
-    threadService = app.serviceInDaemonThread()
-    app.run()
+    
+    app.service()
+    app.main_socket.shutdown(socket.SHUT_RDWR)

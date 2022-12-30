@@ -30,6 +30,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     def __init__(self, server_address, request_handler_class):
         socketserver.TCPServer.__init__(self, server_address, request_handler_class)
+        self.name = "CENTRAL"
         self._abonnement = {
             'DATA': [],
             'LOG': []
@@ -115,9 +116,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
     def redirect_message(self, queue):
         print("consumer")
         while True:
-            # retrieve an item
-            # time.sleep(1)
-
             deserialized_message = queue.get()
             message_type = deserialized_message.get("type")
 
@@ -131,19 +129,19 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                     self._wfile[numSocket].write(bytes_message + b"\n")
             
             elif message_type == 'CMD':
-                if deserialized_message["destinataire"] != '':
+                destinataire = deserialized_message["destinataire"]
+                if destinataire != '':
                     try:
-                        destinataire = deserialized_message["destinataire"]
-                        if destinataire == "IHM":
-                            if deserialized_message["msg"] == "recup_action":
+                        #Traitement particulier quand on demande des information au CENTRAL
+                        if destinataire == self.name:
+                            if deserialized_message["action"] == "recup_action":
                                 deserialized_message["msg"] = self.getActions()
-                            else:
-                                pass
+                            
                         else:
                             pass
                         fillno = self.name_to_fillno[destinataire]
-                        self._wfile[fillno].write(bytes_message + b"\n")
                         logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
+                        self._wfile[fillno].write(bytes_message + b"\n")
                     except KeyError:
                         logging.info("Le client n'est pas connecté")
                     except Exception as e:
