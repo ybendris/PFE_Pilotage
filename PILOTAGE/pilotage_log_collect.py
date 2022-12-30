@@ -156,7 +156,7 @@ class LogCollector(NetworkItem):
                 logging.info("Touche clavier 'a' appuiyée")
                 logging.info(f"Le nom de la session est {self.session}")
 
-            #Réception
+            #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 
             keypress = kb_func()

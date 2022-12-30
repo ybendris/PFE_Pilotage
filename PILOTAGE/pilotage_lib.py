@@ -379,14 +379,7 @@ class NetworkItem(ABC):
     def stop(self, commande):
         self.running = False
 
-    """
-    Fonction permettant de lancer la fonction de service dans un thread daemon
-    Utilisé lorsque le thread principal est maintenu actif par un autre traitement que la fonction de service
-    """
-    def serviceInDaemonThread(self):
-        threadService = threading.Thread(target=self.service,daemon=True)
-        threadService.start()
-        return threadService
+    
 
 class ThreadLecture(threading.Thread):
     def __init__(self, rfile, name, queue):

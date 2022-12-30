@@ -232,7 +232,7 @@ class ProcExec(NetworkItem):
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
 
-            #Réception
+            #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 					
                     

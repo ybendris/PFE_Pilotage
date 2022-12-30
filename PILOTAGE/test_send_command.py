@@ -112,7 +112,7 @@ class TestSendCommand(NetworkItem):
                 self.waitfor(self.ask_action(destinataire='TEST2', action="print_else"),callback=self.stop)
                 
 
-            #Réception
+            #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 					
                     

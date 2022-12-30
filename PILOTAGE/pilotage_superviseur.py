@@ -58,7 +58,7 @@ class Superviseur(NetworkItem):
            
             self.envoie_data_log_test()
 
-            #Réception
+            #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())		
                     
             keypress = kb_func()
