@@ -34,32 +34,22 @@ export class SessionComponent implements OnInit {
   Renvoie true si la variable sessionName est vide, et false sinon.
    */
   isNameEmpty(){
-    if(this.sessionName == ""){
-      return true
-    }
-    return false
+    return this.sessionName == '';
   }
 
   /*
   Renvoie true si la variable sessionDescription est vide, et false sinon.
    */
-
-  isDescriptionEmpty(){
-    if(this.sessionDescription == ""){
-      return true
-    }
-    return false
+  isDescriptionEmpty() {
+    return this.sessionDescription == '';
   }
 
   /*
   Utilise les fonctions isNameEmpty() et isDescriptionEmpty() pour vérifier si le composant est valide et renvoie true si les deux variables sont non vides, et false sinon.
    */
 
-  isValid(){
-    if (this.isNameEmpty() || this.isDescriptionEmpty()){
-      return false
-    }
-    return true
+  isValid() {
+    return !this.isNameEmpty() && !this.isDescriptionEmpty();
   }
 
 
