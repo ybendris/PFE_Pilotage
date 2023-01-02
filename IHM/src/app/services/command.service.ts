@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import {Socket} from "ngx-socket-io";
-import {map} from "rxjs";
 import { Commande } from '../models/commande.model';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommandService {
+  
 
-  constructor(private socket: Socket) { }
+  constructor(private socket: Socket, private router: Router) { }
 
 
   /*
@@ -16,20 +17,17 @@ export class CommandService {
    */
 
   sendCmd(commandeToSend : Commande){
+    console.log("sendCmd " +commandeToSend)
     this.socket.emit('send_command', commandeToSend);
   }
 
-  /*
-  waitForResponse souscrit à l'événement 'command_response' 
-  envoyé par le serveur Flask et traite la réponse en la transformant en objet Commande.
-  */
-  waitForResponse() {
-    return this.socket.fromEvent<Commande>('command_response').pipe(map(data => {
-      console.log("data"+data)
-      
-    }));
-  }
 
+  listenForResponse() {
+    this.socket.fromEvent('response').subscribe((response:JSON) => {
+      console.log('received response: ' + JSON.stringify(response));
+      this.router.navigate(['/IHM'], { state: { name: 'My Session TODO', description: 'This is my session. TODO' } });
+    });
+  }
   
 
 }

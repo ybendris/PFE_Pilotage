@@ -26,12 +26,8 @@ export class SessionComponent implements OnInit {
     }
     
     this.command_service.sendCmd(this.commande)
-
-    // Souscrit à l'événement de réponse du serveur Flask et traite la réponse
-    this.command_service.waitForResponse().subscribe(response => {
-      console.log("traitez la réponse ici")
-      console.log(response);
-    });
+    this.command_service.listenForResponse()
+    
   }
 
   /*

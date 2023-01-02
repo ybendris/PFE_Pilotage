@@ -82,11 +82,13 @@ class IhmSupervisor(NetworkItem, Flask):
     Le paramètre command est un dict
     """
     def on_send_command(self, command):
-        print('received message: ' + str(command))
+        print('received message (send_command): ' + str(command))
         print(f'Running in thread {current_thread().name}')
+        time.sleep(1) #Test asynchrone
 
+        self.socketio.emit("response", command)
         #TODO à compléter
-        self.waitfor(id=self.ask_action(destinataire= command["destinataire"], action = command["action"], dict_message=command["msg"]), callback=self.test)
+        #self.waitfor(id=self.ask_action(destinataire= command["destinataire"], action = command["action"], dict_message=command["msg"]), callback=self.test)
         
 
     def test(self, commande):
