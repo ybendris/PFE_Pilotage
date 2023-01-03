@@ -10,6 +10,7 @@
 
 #  _______________________________________________________ IMPORT ______________________________________________________
 
+import socket
 import sys
 import os
 import logging
@@ -196,5 +197,12 @@ if __name__ == '__main__':
     logCollect = LogCollector(HOST, PORT, name, abonnement, dt_string)
     logCollect.service()
     
+    logCollect.main_socket.shutdown(socket.SHUT_RDWR)
+
+    # server.write_thread.join()
+    logging.info("{} joined ended with main thread".format(logCollect.write_thread.name))
+
+    # server.read_thread.join()
+    logging.info("{} joined ended with main thread".format(logCollect.read_thread.name))
 
     

@@ -125,3 +125,10 @@ if __name__ == '__main__':
     
     app.service()
     app.main_socket.shutdown(socket.SHUT_RDWR)
+
+    # server.write_thread.join()
+    logging.info("{} joined ended with main thread".format(app.write_thread.name))
+
+    # server.read_thread.join()
+    logging.info("{} joined ended with main thread".format(app.read_thread.name))
+    

@@ -29,16 +29,12 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 class Superviseur(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
-
-    def traiterCommande(self, commande):
-        pass
-
+    
     def traiterData(self, data):
         pass
 
     def traiterLog(self, log):
         pass
-
     
     """
     Fonction définissant les actions de la classe
@@ -98,5 +94,3 @@ if __name__ == '__main__':
 
     # server.read_thread.join()
     logging.info("{} joined ended with main thread".format(server.read_thread.name))
-
-    # server.serve_forever()

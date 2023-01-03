@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-
 """ Nom du module : ProcEXE"""
 
 """ Description """
 """ Version 1 """
 """ Date : 17/12/2022"""
 """ Auteur : Equipe CEIS """
-""""""
 
 #  _______________________________________________________ IMPORT ______________________________________________________
 
@@ -54,8 +52,7 @@ class ProcExec(NetworkItem):
     def list_procedures(self):
         return glob.glob("proc*.txt", root_dir=self.proc_dir)
 
-    
-    
+
     """
     Fonction définissant les actions du ProcEXE
 
@@ -143,8 +140,6 @@ class ProcExec(NetworkItem):
                 if(position_index < nb_statements):
                     statement = self.analyse_statement(statements_list[position_index])
                     
-                
-
                     #Log.send(ctx['statements'][ctx['position']], level=3, direction="next")
                     if statement is not None and statement['directive']=='pause':
                         t0 = time.perf_counter()
@@ -234,8 +229,7 @@ class ProcExec(NetworkItem):
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
-					
-                    
+
             keypress = kb_func()
         logging.info("Service fini")
             
@@ -250,7 +244,7 @@ if __name__ == '__main__':
 
    
     proc_exe = ProcExec(host=HOST, port=PORT, name=name, abonnement=abonnement, proc_dir="./Procedures/")
-    # class Superviseur qui hérite de NetworkItem, qui redef service
+    # class ProcExec qui hérite de NetworkItem, qui redef service
     proc_exe.service()
 
     proc_exe.main_socket.shutdown(socket.SHUT_RDWR)
@@ -260,5 +254,3 @@ if __name__ == '__main__':
 
     # server.read_thread.join()
     logging.info("{} joined ended with main thread".format(proc_exe.read_thread.name))
-
-    # server.serve_forever()

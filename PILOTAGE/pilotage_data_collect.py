@@ -11,6 +11,7 @@
 #  _______________________________________________________ IMPORT ______________________________________________________
 
 import signal
+import socket
 import sys
 import os
 import logging
@@ -157,4 +158,13 @@ if __name__ == '__main__':
     dt_string = getBeginDateTime()
     abonnement = ["DATA"]
     data_collect = DataCollect(HOST, PORT, name, abonnement, dt_string)
+    
     data_collect.service()
+
+    data_collect.main_socket.shutdown(socket.SHUT_RDWR)
+
+    # server.write_thread.join()
+    logging.info("{} joined ended with main thread".format(data_collect.write_thread.name))
+
+    # server.read_thread.join()
+    logging.info("{} joined ended with main thread".format(data_collect.read_thread.name))
