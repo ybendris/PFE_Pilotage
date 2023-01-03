@@ -93,9 +93,11 @@ class ProcExec(NetworkItem):
 		#Log.send("EXECUTION DE {}".format(maproc), level=2, direction="PROC")
 		#On initialise le contexte: variable représentant l'instruction à éxécuter
         contexte = {'name' : maproc, 'position':0, 'statements':self.charge_proc(maproc)}
-		#On lance l'execution de la 1ere ligne
-        self.encours = contexte
-        self.execnextstatement()
+        if len(contexte['statements']) != 0:
+		    #On lance l'execution de la 1ere ligne
+            self.encours = contexte
+            logging.info("EXECUTION START")
+            self.execnextstatement()
 
 
     """
@@ -108,38 +110,39 @@ class ProcExec(NetworkItem):
     List[str]: Liste des lignes valides (non vides / pas de commentaires) de la procédure.
     """
     def charge_proc(self, name):
-        with open(self.proc_dir + name, 'r') as f: # Ouvre le fichier de procédure dans le répertoire self.proc_dir en lecture
-            statements = [] # Initialise une liste vide pour stocker les statements valides
-            for ligne in f: # Pour chaque ligne du fichier
-                ligne = ligne.strip()  # Supprime les espaces en début et fin de ligne
-                if ligne == '' or ligne.startswith('#'): # Si la ligne est vide ou commence par '#', on l'ignore
-                    continue
-                statements.append(ligne) # Sinon, on ajoute la ligne à la liste
+        statements = [] # Initialise une liste vide pour stocker les statements valides
+        try:
+            with open(self.proc_dir + name, 'r') as f: # Ouvre le fichier de procédure dans le répertoire self.proc_dir en lecture
+                for ligne in f: # Pour chaque ligne du fichier
+                    ligne = ligne.strip()  # Supprime les espaces en début et fin de ligne
+                    if ligne == '' or ligne.startswith('#'): # Si la ligne est vide ou commence par '#', on l'ignore
+                        continue
+                    statements.append(ligne) # Sinon, on ajoute la ligne à la liste
+        except FileNotFoundError:
+            logging.info(f"Le fichier {name} n'a pas été trouvé")
+
         return statements  # On retourne la liste des lignes valides
 
     def execnextstatement(self):
         contexte = self.encours
-
+        
         if contexte is not None:
             #Le wait peut être due à deux chose:
             # Une directive pause: on donne un temps de pause à attendre
             # Une directive wait: on attend une réponse
-            if contexte.get('wait') and 'wait' in contexte:           
+            if contexte.get('wait') and 'wait' in contexte: 
                 if isinstance(contexte['wait'], float):
                     t = time.perf_counter()
                     if t >= contexte['wait']:
                         #Log.send("attente terminée".format(t, ctx['wait']), level=3, direction="wait")
+                        logging.info("Attente terminée")
                         del contexte['wait']
                         contexte['position'] += 1
 
-            position_index = contexte.get("position")
-            statements_list = contexte.get("statements")
-            if statements_list is not None and position_index is not None:
-                nb_statements = len(statements_list)
-
-                if(position_index < nb_statements):
-                    statement = self.analyse_statement(statements_list[position_index])
-                    
+            elif contexte["statements"] is not None and contexte["position"] is not None:
+                nb_statements = len(contexte["statements"])
+                if(contexte["position"] < nb_statements):
+                    statement = self.analyse_statement(contexte["statements"][contexte["position"]])
                     #Log.send(ctx['statements'][ctx['position']], level=3, direction="next")
                     if statement is not None and statement['directive']=='pause':
                         t0 = time.perf_counter()
@@ -147,27 +150,28 @@ class ProcExec(NetworkItem):
                         contexte['wait'] = t0+delay
                     elif statement is not None and statement['directive']=='send':
                         if 'srv' not in statement or 'action' not in statement:
-                            #on ne comprend pas, on passe au suivant
+                            logging.info("on ne comprend pas, on passe au suivant")
                             #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
-                            position_index += 1
+                            contexte["position"] += 1
                         else:
                             #on demande l'execution au service via une commande
-
                             self.ask_action(destinataire= statement['srv'], action = statement['action'], list_params = statement['params'])
                             #self.ask_action(statement['srv'], statement['action'], statement['params'])
-                            position_index += 1
+                            contexte["position"] += 1
+                            #print(f"position_index {contexte['position']}")
                     elif statement is not None and statement['directive']=='wait':
                         if 'srv' not in statement or 'action' not in statement:
                             #on ne comprend pas, on passe au suivant
                             #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
-                            position_index += 1
+                            contexte["position"] += 1
                         else:
                             #on demande l'execution au service
                             contexte['wait'] = statement
                             self.waitfor(id=self.ask_action(destinataire= statement['srv'], action = statement['action'], list_params= statement['params']), callback=partial(self.answer_statement, contexte))
                 
-                if statements_list and position_index >= nb_statements:
-                    #Log.send("EXECUTION OVER", level=2, direction="PROC")
+                if contexte["statements"] and contexte["position"] >= nb_statements:
+                    logging.info("EXECUTION OVER")
+
                     self.encours = None
                     #on prend la prochaine
                     if self.proc2exec:
@@ -207,12 +211,10 @@ class ProcExec(NetworkItem):
             del contexte['wait']
             contexte['position'] += 1
 
-    
-
     def traiterData(self, data):
         logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
 
-    def traiterLog(self, data):
+    def traiterLog(self, log):
         logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
 
 
@@ -226,7 +228,16 @@ class ProcExec(NetworkItem):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
+                self.action_execproc("proc_test.txt")
 
+            if keypress and keypress == 'z':
+                logging.info("Touche clavier 'z' appuyée")
+                self.action_execproc("proc_test_pause.txt")
+
+
+            self.execnextstatement()
+
+            time.sleep(0.5)
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 

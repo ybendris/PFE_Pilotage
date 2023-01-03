@@ -315,7 +315,7 @@ class NetworkItem(ABC):
         commande["params"] = list_params
         commande["msg"] = dict_message
 
-        logging.info(f"Commande envoyée :{commande}")
+        #logging.info(f"Commande envoyée :{commande}")
         self.queue_message_to_send.put(commande)
         return id
 

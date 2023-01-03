@@ -154,11 +154,11 @@ class DataCollect(NetworkItem):
 
 if __name__ == '__main__':
     logging.info('starting')
-    name = "DATA_COLLECT" #sys.argv[1]
+    name = "DATA_COLLECT"
     dt_string = getBeginDateTime()
     abonnement = ["DATA"]
     data_collect = DataCollect(HOST, PORT, name, abonnement, dt_string)
-    
+
     data_collect.service()
 
     data_collect.main_socket.shutdown(socket.SHUT_RDWR)
