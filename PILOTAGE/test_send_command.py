@@ -123,7 +123,10 @@ class TestSendCommand(NetworkItem):
             if keypress and keypress == 'o':
                 logging.info("Touche clavier 'o' appuyée")
                 self.waitfor(self.ask_action(destinataire='TEST2', action="print_else"),callback=self.stop)
-                
+
+            if keypress and keypress == 'p':
+                logging.info("Touche clavier 'p' appuyée")
+                self.ask_action(destinataire='HUB_SPV', action="getConnected")    
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
