@@ -1,6 +1,6 @@
 # PILOTAGE:
 
-Ce projet représente les applications Python à lancer pour faire les différentes fonction de la partie pilotage du projet CASYOPE
+Ce projet représente les applications Python à lancer pour faire les différentes fonctions de la partie pilotage du projet CASYOPE
 
 ## Prérequis
 

@@ -43,7 +43,6 @@ class SuperviseurSinus(NetworkItem):
         self.d1 = random.random()*2*np.pi
         self.d2 = random.random()*2*np.pi
         self.d3 = random.random()*2*np.pi
-        self.testdata = deque()
         self.pause_until = 0
         
     def gen_param(self):
@@ -121,10 +120,10 @@ class SuperviseurSinus(NetworkItem):
         self.d3 -= 3*2*np.pi*self.fq*delay
 
     def remplit(self):
-        
         if 'last' not in self.__dict__ or self.last is None:
             self.first = round(time.perf_counter(),3)
             self.last = self.first
+            logging.info("cas 1")
         elif self.last < self.pause_until:
             now = time.perf_counter()
             if now > self.pause_until:
@@ -133,19 +132,26 @@ class SuperviseurSinus(NetworkItem):
             nbval = int((now-self.last)*1000)
             x = np.linspace(self.last, now, nbval)
             y = np.full(nbval, self.yfix)
+
+          
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
             self.last = now
+            logging.info("cas 2")
             self.testdata = self.testdata.append(y.tolist())
         else:
             now = time.perf_counter()			
             val0 = int((self.last-self.first)*1000)
             
-            nbval = int((now-self.last)*1000)
+            nbval = int((now-self.last)*100)
             x = np.linspace(self.last, now, nbval)
             y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
             y = y*100
+            #logging.info(y)
+            #logging.info("---",np.sin(2*np.pi*self.fq*x))
+
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
             self.last = now
+            #logging.info("cas 3")
             self.testdata = self.testdata.append(y.tolist())
 
     def traiterData(self, data):
@@ -175,43 +181,26 @@ class SuperviseurSinus(NetworkItem):
                 d = self.data['{}.sin'.format(self.name)].popleft()
                 print(d["counter"],len(d["data"]))
                 #self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
-                print(self.testdata)
+                
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())		
                     
-            keypress = kb_func()
             
-            time.sleep(1)
+            
+            #time.sleep(1)
 
             if time.perf_counter() > check_data+0.015:
                 self.remplit()
                 check_data = time.perf_counter()
-            
 
+            keypress = kb_func()
         logging.info("Service fini")
     
-    def envoie_data_log_test(self):
-        alea = random.randrange(1,6)
-        #logging.info('LA VALEUR RANDOM VAUT : ' + str(alea))
-        if alea == 1:
-            pass
-        elif alea == 2:
-            self.send_data(expediteur= self.name, paquet = "BEAT", dict_message={"DATA1":"data1","DATA2":"data2","DATA3":"data3"})
-        elif alea == 3:
-            self.send_data(expediteur= self.name, paquet = "ADVANCED", dict_message={"DATA4":"data4","DATA5":"data5","DATA6":"data6"})
-        elif alea == 4:
-            self.send_data(expediteur= self.name, paquet = "RECONSTRUCTED", dict_message={"DATA7":"data7","DATA8":"data8","DATA9":"data9"})
-        else:
-            niveauLogAlea = random.randrange(0, 8)
-            self.send_log("Message du LOG", niveauLogAlea)
-
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <name>")
-        sys.exit(1)
-    name = sys.argv[1]
+   
+    name = "SINUS"
     abonnement = []
 
 
