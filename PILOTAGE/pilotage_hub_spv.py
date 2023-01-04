@@ -47,6 +47,7 @@ class HubSPV(NetworkItem):
         port_data = []
         #On parcourt tout les périphériques connectés en série (COM)
         for port in serial.tools.list_ports.comports():
+            info=""
             #Si l'hardware Id correspond à celui de l'adaptateur du CAP on l'ajoute au tableau
             if port.hwid == "USB VID:PID=0403:6001 SER=A104GC9LA":
                 info = dict({"Name": "CAP", "Adresse": port.name})
@@ -54,7 +55,8 @@ class HubSPV(NetworkItem):
             #Si l'hardware Id correspond à celui de l'adaptateur du BAP on l'ajoute au tableau
             elif port.hwid == "USB VID:PID=0403:6001 SER=A100TL08A":
                 info = dict({"Name": "BAP", "Adresse": port.name})
-            port_data.append(info)
+            if info != "":
+                port_data.append(info)
         #TODO ajouter la récupération des périphériques USB
         #affichage du tableau obtenu pour débuggage
         print (port_data)
