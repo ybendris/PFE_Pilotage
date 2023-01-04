@@ -222,15 +222,14 @@ class NetworkItem(ABC):
                 logging.info(f"wait: {wait}")
                 del self._waitfor[commande_id] #On n'attend plus de réponse avec cet id
                 func_callback = wait["callback"] 
-                logging.info(f"commande_msg: {commande_msg}")      
                 logging.info(f"commande_msg: {commande_msg}")  
-                #TODO à vérifier si c'est suffisant      
-                """if isinstance(commande_msg, dict):
+                #TODO tester les différents cas (à savoir que commande_msg est déjà un dict vide par défaut )
+                if isinstance(commande_msg, dict):
                     func_callback(**commande_msg)
                 elif isinstance(commande_msg, list):
                     func_callback(*commande_msg)
-                else:"""
-                func_callback(commande_msg)
+                else:
+                    func_callback(commande_msg)
 
         #Traitement des commandes identifiées comme des requêtes valides (dans les actions)
         elif commande_action in self.get_action():

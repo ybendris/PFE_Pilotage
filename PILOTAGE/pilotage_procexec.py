@@ -42,12 +42,16 @@ class ProcExec(NetworkItem):
 
 
     """
-    Liste l'ensemble des fichiers de procédures disponibles dans le répertoire proc_dir.
+    Entrée:
+        Aucune
 
-    Le nom d'un fichier de procédure est écrit sous la forme:
-    “proc*.txt”
+    Traitement:
+        Liste l'ensemble des fichiers de procédures disponibles dans le répertoire proc_dir.
+        Le nom d'un fichier de procédure est écrit sous la forme:
+            “proc*.txt”
 
-    Retourne une liste contenant les noms de tous les fichiers de procédures.
+    Sortie:
+        Une liste contenant les noms de tous les fichiers de procédures.
     """
     def list_procedures(self):
         return glob.glob("proc*.txt", root_dir=self.proc_dir)
@@ -89,6 +93,23 @@ class ProcExec(NetworkItem):
         else:
             self.prepare_proc(proc)
 
+
+    """
+    Entrée:
+        maproc: Le nom du fichier de procédure 
+
+    Traitement:
+        Prépare un dictionnaire avec les données:
+            name: (maproc)
+            position: 0 (par défaut)
+            statements: (self.charge_proc(maproc))
+        
+        Si statements n'est pas une liste vide.
+        Lance self.execnextstatement()
+
+    Sortie:
+        Aucune
+    """
     def prepare_proc(self, maproc):
 		#Log.send("EXECUTION DE {}".format(maproc), level=2, direction="PROC")
 		#On initialise le contexte: variable représentant l'instruction à éxécuter
@@ -245,9 +266,6 @@ class ProcExec(NetworkItem):
         logging.info("Service fini")
             
             
-
-            
-
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
     name = "PROCEXEC"
