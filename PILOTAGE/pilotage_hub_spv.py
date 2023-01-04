@@ -24,7 +24,7 @@ PORT = 65432
 Elle permet l’identification des instruments connectés et la mémorisation des adresses
 """
 class HubSPV(NetworkItem):
-    def __init__(self, host, port, name, abonnement, proc_dir):
+    def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
 
     def traiterData(self, data):
@@ -34,8 +34,7 @@ class HubSPV(NetworkItem):
         pass
 
     """
-    TODO
-    Fonction permettant de récupérer les instruments connectés
+    Fonction permettant de récupérer les instruments connectés et leur adresse pour communiquer
     Entrée:
         self (objet courant)
     Traitement:
@@ -43,19 +42,29 @@ class HubSPV(NetworkItem):
     Sortie:
         La liste des instruments connectés avec leur adresse
     """
-    def getConnect(self):
+    def getConnected(self):
+        #tableau qui contiendra les adresses et noms des instruments connectés
         port_data = []
+        #On parcourt tout les périphériques connectés en série (COM)
         for port in serial.tools.list_ports.comports():
-            info = dict({"Name": port.name, "Description": port.description, "Manufacturer": port.manufacturer,
-                 "Hwid": port.hwid})
+            #Si l'hardware Id correspond à celui de l'adaptateur du CAP on l'ajoute au tableau
+            if port.hwid == "USB VID:PID=0403:6001 SER=A104GC9LA":
+                info = dict({"Name": "CAP", "Adresse": port.name})
+                print("CAP")
+            #Si l'hardware Id correspond à celui de l'adaptateur du BAP on l'ajoute au tableau
+            elif port.hwid == "USB VID:PID=0403:6001 SER=A100TL08A":
+                info = dict({"Name": "BAP", "Adresse": port.name})
             port_data.append(info)
+        #TODO ajouter la récupération des périphériques USB
+        #affichage du tableau obtenu pour débuggage
         print (port_data)
+        return port_data
 
     """
     Fonction définissant les actions du superviseur du Hub
     """
     def define_action(self):
-        actions = [{"nom":"getConnect","function": self.getConnect},{"nom":"stop","function": self.stop}]
+        actions = [{"nom":"getConnected","function": self.getConnect},{"nom":"stop","function": self.stop}]
         return actions
 
 
@@ -68,8 +77,7 @@ class HubSPV(NetworkItem):
         keypress = kb_func()		
         while keypress != 'q' and self.running:			
             ## les commandes claviers
-            if keypress and keypress == 'a':
-                logging.info("Touche clavier 'a' appuyée")
+
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
