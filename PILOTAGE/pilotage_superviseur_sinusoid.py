@@ -119,6 +119,12 @@ class SuperviseurSinus(NetworkItem):
         self.d2 -= 2*2*np.pi*self.fq*delay
         self.d3 -= 3*2*np.pi*self.fq*delay
 
+    """
+    Remplie une structure de donnée (self.data) avec des données formant la somme de 3 sinusoïdes
+
+
+
+    """
     def remplit(self):
         if 'last' not in self.__dict__ or self.last is None:
             self.first = round(time.perf_counter(),3)
@@ -130,12 +136,10 @@ class SuperviseurSinus(NetworkItem):
                 now = self.pause_until
             val0 = int((self.last-self.first)*1000)
             nbval = int((now-self.last)*1000)
-            
 
-            x = np.linspace(self.last, now, nbval)
-            y = np.full(nbval, self.yfix)
-          
-            self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
+            #y = np.full(nbval, self.yfix) (Code LA)
+
+            self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':{"time":time.perf_counter(),"test_sinus":self.yfix }})
             self.last = now
             logging.info("cas 2")
         else:
@@ -143,14 +147,17 @@ class SuperviseurSinus(NetworkItem):
             val0 = int((self.last-self.first)*1000)
             nbval = int((now-self.last)*1000)
 
-            print(f"nbval {nbval}")
+            #x = np.linspace(self.last, now, nbval) (Code LA)
+            x2 = now
 
-            x = np.linspace(self.last, now, nbval)
-            y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
-            y = y*100
-            print(y)
+            #y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3) (Code LA)
+            y2 = self.a0+self.a1*np.sin(2*np.pi*self.fq*x2+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x2+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x2+self.d3)
+            #y = y*100 (Code LA)
+            y2 = y2*100
+            
+            print(f"y2 {y2}")
 
-            self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
+            self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':{"time":time.perf_counter(),"test_sinus":y2 }})
             self.last = now
 
     def traiterData(self, data):
@@ -166,7 +173,6 @@ class SuperviseurSinus(NetworkItem):
         actions = [
             {"nom":"stop","function": self.stop},
             {"nom":"dem_accelerate", "function": self.action_accelerate},
-            {"nom":"dem_accelerate-to", "function":self.action_accelerate_to},
             {"nom":"dem_decelerate", "function":self.action_decelerate},
             {"nom":"dem_pause", "function":self.action_pause_1},
             {"nom":"dem_change",  "function":self.action_regen_param}
@@ -186,8 +192,8 @@ class SuperviseurSinus(NetworkItem):
 
             while self.data['{}.sin'.format(self.name)]:
                 d = self.data['{}.sin'.format(self.name)].popleft()
-                print(type(d["data"]) )
-                self.send_data(expediteur=self.name,paquet= "test", donnees=d['data'])
+                print(d)
+                self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
                 
 
             #Réception de la part des messages venant du CENTRAL

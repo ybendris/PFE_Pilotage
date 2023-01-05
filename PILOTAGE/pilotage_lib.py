@@ -331,7 +331,7 @@ class NetworkItem(ABC):
         data["expediteur"] = expediteur
         data["paquet"] = paquet
         data["msg"] = dict_message
-        logging.info(f"Data envoyée :{data}")
+        #logging.info(f"Data envoyée :{data}")
         self.queue_message_to_send.put(data)
 
 

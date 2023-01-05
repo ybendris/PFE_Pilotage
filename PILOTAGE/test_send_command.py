@@ -126,7 +126,15 @@ class TestSendCommand(NetworkItem):
 
             if keypress and keypress == 'p':
                 logging.info("Touche clavier 'p' appuyée")
-                self.ask_action(destinataire='HUB_SPV', action="getConnected")    
+                self.ask_action(destinataire='HUB_SPV', action="getConnected")  
+
+            if keypress and keypress == 's':
+                logging.info("Touche clavier 's' appuyée")
+                self.ask_action(destinataire='SINUS', action="dem_accelerate")  
+
+            if keypress and keypress == 'd':
+                logging.info("Touche clavier 's' appuyée")
+                self.ask_action(destinataire='SINUS', action="dem_decelerate")  
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
