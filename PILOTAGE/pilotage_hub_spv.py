@@ -42,7 +42,7 @@ class HubSPV(NetworkItem):
     Sortie:
         La liste des instruments connectés avec leur adresse
     """
-    def getConnected(self):
+    def getConnected(self,message):
         #tableau qui contiendra les adresses et noms des instruments connectés
         port_data = []
         #On parcourt tout les périphériques connectés en série (COM)
@@ -66,7 +66,7 @@ class HubSPV(NetworkItem):
     Fonction définissant les actions du superviseur du Hub
     """
     def define_action(self):
-        actions = [{"nom":"getConnected","function": self.getConnect},{"nom":"stop","function": self.stop}]
+        actions = [{"nom":"getConnected","function": self.getConnected},{"nom":"stop","function": self.stop}]
         return actions
 
 
@@ -96,12 +96,12 @@ if __name__ == '__main__':
    
     hub_spv = HubSPV(host=HOST, port=PORT, name=name, abonnement=abonnement)
     # class HubSPV qui hérite de NetworkItem, qui redef service
-    HubSPV.service()
+    hub_spv.service()
 
-    HubSPV.main_socket.shutdown(socket.SHUT_RDWR)
+    hub_spv.main_socket.shutdown(socket.SHUT_RDWR)
 
     # server.write_thread.join()
-    logging.info("{} joined ended with main thread".format(HubSPV.write_thread.name))
+    logging.info("{} joined ended with main thread".format(hub_spv.write_thread.name))
 
     # server.read_thread.join()
-    logging.info("{} joined ended with main thread".format(HubSPV.read_thread.name))
+    logging.info("{} joined ended with main thread".format(hub_spv.read_thread.name))
