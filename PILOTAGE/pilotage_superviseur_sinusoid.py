@@ -130,29 +130,28 @@ class SuperviseurSinus(NetworkItem):
                 now = self.pause_until
             val0 = int((self.last-self.first)*1000)
             nbval = int((now-self.last)*1000)
+            
+
             x = np.linspace(self.last, now, nbval)
             y = np.full(nbval, self.yfix)
-
           
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
             self.last = now
             logging.info("cas 2")
-            self.testdata = self.testdata.append(y.tolist())
         else:
-            now = time.perf_counter()			
+            now = time.perf_counter()
             val0 = int((self.last-self.first)*1000)
-            
-            nbval = int((now-self.last)*100)
+            nbval = int((now-self.last)*1000)
+
+            print(f"nbval {nbval}")
+
             x = np.linspace(self.last, now, nbval)
             y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
             y = y*100
-            #logging.info(y)
-            #logging.info("---",np.sin(2*np.pi*self.fq*x))
+            print(y)
 
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':y.tolist()})
             self.last = now
-            #logging.info("cas 3")
-            self.testdata = self.testdata.append(y.tolist())
 
     def traiterData(self, data):
         pass
@@ -164,7 +163,15 @@ class SuperviseurSinus(NetworkItem):
     Fonction définissant les actions de la classe
     """
     def define_action(self):
-        actions = [{"nom":"stop","function": self.stop}]
+        actions = [
+            {"nom":"stop","function": self.stop},
+            {"nom":"dem_accelerate", "function": self.action_accelerate},
+            {"nom":"dem_accelerate-to", "function":self.action_accelerate_to},
+            {"nom":"dem_decelerate", "function":self.action_decelerate},
+            {"nom":"dem_pause", "function":self.action_pause_1},
+            {"nom":"dem_change",  "function":self.action_regen_param}
+        ]
+        
         return actions
     
     """
@@ -179,8 +186,8 @@ class SuperviseurSinus(NetworkItem):
 
             while self.data['{}.sin'.format(self.name)]:
                 d = self.data['{}.sin'.format(self.name)].popleft()
-                print(d["counter"],len(d["data"]))
-                #self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
+                print(type(d["data"]) )
+                self.send_data(expediteur=self.name,paquet= "test", donnees=d['data'])
                 
 
             #Réception de la part des messages venant du CENTRAL
@@ -190,7 +197,7 @@ class SuperviseurSinus(NetworkItem):
             
             #time.sleep(1)
 
-            if time.perf_counter() > check_data+0.015:
+            if time.perf_counter() > check_data+0.005: #toute les 5 ms (200hz)
                 self.remplit()
                 check_data = time.perf_counter()
 
