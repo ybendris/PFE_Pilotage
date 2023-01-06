@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """ Nom du module : ProcEXE"""
 
 """ Description """
