@@ -377,6 +377,7 @@ class NetworkItem(ABC):
     """
     def stop(self, commande):
         self.running = False
+        return "STOP"
 
     
 

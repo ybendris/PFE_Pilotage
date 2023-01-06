@@ -73,7 +73,7 @@ class ProcExec(NetworkItem):
     
     def action_execproc(self, proc, *karg):
         """
-        Exécute une procédure d'action.
+        Exécute une procédure d'action, si une procédure est en cours elle est mise dans une file d'attente
 
         Parameters:
             self (object): L'objet sur lequel est appelée la méthode.
@@ -91,7 +91,7 @@ class ProcExec(NetworkItem):
 
     def prepare_proc(self, maproc):
         """
-        Prépare l'exécution d'une procédure.
+        Prépare l'exécution d'une procédure. 
 
         Parameters:
             self (object): L'objet sur lequel est appelée la méthode.
@@ -296,16 +296,15 @@ class ProcExec(NetworkItem):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
-                self.action_execproc("proc_test.txt")
+                self.action_execproc("proc_sinus.txt")
 
             if keypress and keypress == 'z':
                 logging.info("Touche clavier 'z' appuyée")
                 self.action_execproc("proc_test_pause.txt")
 
-
             self.execnextstatement()
 
-            time.sleep(0.5)
+            
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 

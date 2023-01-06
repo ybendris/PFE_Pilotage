@@ -33,6 +33,7 @@ class SuperviseurSinus(NetworkItem):
     def __init__(self, host, port, name, abonnement):
         NetworkItem.__init__(self, host, port, name, abonnement)
         self.go()
+        self.started = False
 
     def go(self):
         """
@@ -103,7 +104,6 @@ class SuperviseurSinus(NetworkItem):
             delay = self.next_y(ytransit)
             self.yfix = ytransit
             self.pause_until = self.last+delay
-            #self.action_pause(delay)
 
 
     def next_y(self, y_target):
@@ -262,7 +262,7 @@ class SuperviseurSinus(NetworkItem):
 
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':{"time":time.perf_counter(),"test_sinus":y2 }})
             self.last = now
-
+ 
 
     def traiterData(self, data):
         """
@@ -291,6 +291,9 @@ class SuperviseurSinus(NetworkItem):
         """
         logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
     
+    def start_mesure(self, message):
+        logging.info("start_mesure")
+        self.started = True
 
     def define_action(self):
         """
@@ -304,6 +307,7 @@ class SuperviseurSinus(NetworkItem):
         """
         actions = [
             {"nom":"stop","function": self.stop},
+            {"nom":"start_mesure","function": self.start_mesure},
             {"nom":"dem_accelerate", "function": self.action_accelerate},
             {"nom":"dem_decelerate", "function":self.action_decelerate},
             {"nom":"dem_pause", "function":self.action_pause_1},
@@ -327,22 +331,24 @@ class SuperviseurSinus(NetworkItem):
         keypress = kb_func()		
         check_data = time.perf_counter()
         while keypress != 'q' and self.running:			
+            #Réception de la part des messages venant du CENTRAL
+            self.traiterMessage(self.getMessage())	
+
             ## les commandes claviers
 
-            while self.data['{}.sin'.format(self.name)]:
-                d = self.data['{}.sin'.format(self.name)].popleft()
-                print(d)
-                self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
+
+            if self.started:
+                while self.data['{}.sin'.format(self.name)]:
+                    d = self.data['{}.sin'.format(self.name)].popleft()
+                    print(d)
+                    self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
                 
+                if time.perf_counter() > check_data+0.005: #toute les 5 ms (200hz)
+                    self.remplit()
+                    check_data = time.perf_counter()
 
-            #Réception de la part des messages venant du CENTRAL
-            self.traiterMessage(self.getMessage())		
-                    
+            	
             #time.sleep(1)
-
-            if time.perf_counter() > check_data+0.005: #toute les 5 ms (200hz)
-                self.remplit()
-                check_data = time.perf_counter()
 
             keypress = kb_func()
         logging.info("Service fini")
@@ -352,7 +358,6 @@ if __name__ == '__main__':
    
     name = "SINUS"
     abonnement = []
-
 
     spv = SuperviseurSinus(host=HOST, port=PORT, name=name, abonnement=abonnement)
     # class SuperviseurSinus qui hérite de NetworkItem, qui redef service
