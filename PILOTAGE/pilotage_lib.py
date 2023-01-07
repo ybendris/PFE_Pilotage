@@ -440,7 +440,7 @@ class Collecteur:
 
         self.datetime = date
         self.session = session
-        self.dataPandas = {}
+        self.data_dict = {}
         self.typeDonnees = typeDonnees
 
 
@@ -450,9 +450,9 @@ class Collecteur:
 
     
     def write_to_csv(self, param):
-        for cles in self.dataPandas.keys():
-            attributs = self.dataPandas[cles][0].keys()
-            dataframe = pd.DataFrame(self.dataPandas[cles], columns=attributs)
+        for cles in self.data_dict.keys():
+            attributs = self.data_dict[cles][0].keys()
+            dataframe = pd.DataFrame(self.data_dict[cles], columns=attributs)
            
             if self.typeDonnees == "DATA":
                 format_string = "{}/{}_{}{}{}_{}.csv"

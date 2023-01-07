@@ -42,7 +42,7 @@ class LogCollector(NetworkItem, Collecteur):
             
             if keypress and keypress == 'z':
                 logging.info("Touche clavier 'z' appuyée")
-                logging.info(self.dataPandas)
+                logging.info(self.data_dict)
             
             if keypress and keypress == 'e':
                 logging.info("Touche clavier 'e' appuyée")
@@ -61,10 +61,10 @@ class LogCollector(NetworkItem, Collecteur):
     def traiterLog(self, log):
         cle = self.datetime
         
-        if cle not in self.dataPandas:
-            self.dataPandas[cle] = deque()
+        if cle not in self.data_dict:
+            self.data_dict[cle] = deque()
 
-        self.dataPandas[cle].append(log)
+        self.data_dict[cle].append(log)
 
 
     def define_action(self):
