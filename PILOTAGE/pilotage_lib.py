@@ -210,6 +210,7 @@ class NetworkItem(ABC):
         commande_id = commande_dict.get("id")
         commande_action = commande_dict.get("action")
         commande_msg = commande_dict.get("msg")
+        commande_params = commande_dict.get("params")
 
         #Traitement des commandes identifiées comme des réponses
         if commande_action == "answer":
@@ -220,23 +221,28 @@ class NetworkItem(ABC):
             if commande_id in self._waitfor: #Si c'est une réponse attendue, on éxécute la fonction de callback que l'élément courant a précisé
                 logging.info(f"La commande ID: {commande_id} attendait une réponse, elle est arrivée")
                 wait = self._waitfor[commande_id]
-                logging.info(f"wait: {wait}")
+                #logging.info(f"wait: {wait}")
                 del self._waitfor[commande_id] #On n'attend plus de réponse avec cet id
                 func_callback = wait["callback"] 
                 logging.info(f"commande_msg: {commande_msg}")  
+                
                 #TODO tester les différents cas (à savoir que commande_msg est déjà un dict vide par défaut )
+
                 if isinstance(commande_msg, dict):
+                    logging.info("isinstance(commande_msg, dict)")
                     func_callback(**commande_msg)
                 elif isinstance(commande_msg, list):
+                    logging.info("isinstance(commande_msg, list)")
                     func_callback(*commande_msg)
                 else:
+                    logging.info("ELSE")
                     func_callback(commande_msg)
 
         #Traitement des commandes identifiées comme des requêtes valides (dans les actions)
         elif commande_action in self.get_action():
             action_callable = self.get_action_callback(commande_action)
             if action_callable is not None:
-                self.reply(commande_dict, action_callable(commande_dict))
+                self.reply(request=commande_dict, answer=action_callable(*commande_params))
 
         #Traitement des commandes non identifiées arrivant
         else:
@@ -251,7 +257,7 @@ class NetworkItem(ABC):
     def reply(self, request, answer):
         logging.info(f"reply to = {request}")
         if answer is not None:
-            return self.send_cmd(id = request["id"], destinataire = request["expediteur"], action='answer', dict_message=answer)
+            return self.send_cmd(id = request["id"], destinataire = request["expediteur"], action='answer', message=answer)
         else:
             return self.send_cmd(id = request["id"], destinataire = request["expediteur"], action='answer')
     
@@ -305,7 +311,7 @@ class NetworkItem(ABC):
         les paramètres #TODO à vérifier
         Le message en lui même sous forme de dictionnaire
     """
-    def send_cmd(self, destinataire, action, id, list_params = [], dict_message = {}):
+    def send_cmd(self, destinataire, action, id, list_params = [], message = None):
         commande = {}
         commande["id"] = id
         commande["type"] = "CMD"
@@ -313,7 +319,7 @@ class NetworkItem(ABC):
         commande["expediteur"] = self.name
         commande["destinataire"] = destinataire
         commande["params"] = list_params
-        commande["msg"] = dict_message
+        commande["msg"] = message
 
         #logging.info(f"Commande envoyée :{commande}")
         self.queue_message_to_send.put(commande)
@@ -438,13 +444,12 @@ class Collecteur:
         self.typeDonnees = typeDonnees
 
 
-    def setNomSession(self, message):
-        print(message["msg"]["session"])
-        self.session=message["msg"]["session"]
+    def setNomSession(self, param):
+        self.session=param
         print("NOM DE LA SESSION : " + self.session)
 
     
-    def write_to_csv(self):
+    def write_to_csv(self, param):
         for cles in self.dataPandas.keys():
             attributs = self.dataPandas[cles][0].keys()
             dataframe = pd.DataFrame(self.dataPandas[cles], columns=attributs)

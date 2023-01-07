@@ -46,11 +46,18 @@ class TestSendCommand(NetworkItem):
             {"nom":"print_else","function": self.print_else},
             {"nom":"test_return_value","function": self.test_return_value},
             {"nom":"test_return_list","function": self.test_return_list},
-            {"nom":"test_return_dict","function": self.test_return_dict}
-            
+            {"nom":"test_return_dict","function": self.test_return_dict},
+            {"nom":"print_list_param","function":self.print_list_param}
         ]
 
         return actions
+
+    def print_list_param(self, *karg):
+        print("----------------------------------------")
+        print(*karg)
+        print("----------------------------------------")
+
+
 
     def print_list(self, list):
         logging.info("print_list début")
@@ -68,14 +75,16 @@ class TestSendCommand(NetworkItem):
         time.sleep(2)
         logging.info("print_else fin")
 
-    def test_return_value(self):
+    def test_return_value(self, *kargs):
         return 55
 
-    def test_return_list(self):
+    def test_return_list(self, *kargs):
         return ["test1", "test2"]
 
-    def test_return_dict(self):
-        return {"data1": "oui", "data2": "toto"}
+    def test_return_dict(self, *kargs):
+        print(kargs)
+        print("dessus")
+        return {"data1": "oui", "data2": "toto", "data3": "tototo"}
 
     """
     Processus principal du TestSendCommand

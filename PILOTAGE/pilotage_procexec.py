@@ -169,19 +169,16 @@ class ProcExec(NetworkItem):
                         contexte['wait'] = t0+delay
                     elif statement is not None and statement['directive']=='send':
                         if 'srv' not in statement or 'action' not in statement:
-                            logging.info("on ne comprend pas, on passe au suivant")
-                            #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
+                            logging.info("ERROR IN EXECUTION, INSTRUCTION SKIPPED")
                             contexte["position"] += 1
+                            print("POSITION+1 k1")
                         else:
                             #on demande l'execution au service via une commande
                             self.ask_action(destinataire= statement['srv'], action = statement['action'], list_params = statement['params'])
-                            #self.ask_action(statement['srv'], statement['action'], statement['params'])
                             contexte["position"] += 1
-                            #print(f"position_index {contexte['position']}")
                     elif statement is not None and statement['directive']=='wait':
                         if 'srv' not in statement or 'action' not in statement:
-                            #on ne comprend pas, on passe au suivant
-                            #Log.send(ctx['statements'][ctx['position']], level=3, direction="error")
+                            logging.info("ERROR IN EXECUTION, INSTRUCTION SKIPPED")
                             contexte["position"] += 1
                         else:
                             #on demande l'execution au service
@@ -190,7 +187,6 @@ class ProcExec(NetworkItem):
                 
                 if contexte["statements"] and contexte["position"] >= nb_statements:
                     logging.info("EXECUTION OVER")
-
                     self.encours = None
                     #on prend la prochaine
                     if self.proc2exec:
@@ -230,7 +226,7 @@ class ProcExec(NetworkItem):
                 return {'directive':directive, 'statement':statement}
 
 
-    def answer_statement(self, contexte, *karg):
+    def answer_statement(self, contexte, *karg, **kwargs):
         """
         Traite la réponse à une instruction en attente.
         Ici on supprime simple la valeur de "wait" dans "contexte"
@@ -243,7 +239,6 @@ class ProcExec(NetworkItem):
         Returns:
             None
         """
-        print("Réponse reçue", karg)
         if 'wait' in contexte:
             #Permet de retirer le wait pour passer à l'instruction suivante
             del contexte['wait']
@@ -294,11 +289,15 @@ class ProcExec(NetworkItem):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
-                self.action_execproc("proc_sinus_30s.txt")
+                self.action_execproc("proc_sinus_10s.txt")
 
             if keypress and keypress == 'z':
                 logging.info("Touche clavier 'z' appuyée")
-                self.action_execproc("proc_test_pause.txt")
+                self.action_execproc("proc_test_params.txt")
+
+            if keypress and keypress == 'e':
+                logging.info("Touche clavier 'e' appuyée")
+                self.action_execproc("proc_test_params.txt")
 
             self.execnextstatement()
 
