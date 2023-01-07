@@ -1,0 +1,358 @@
+measure:
+   send: False
+   receive: True
+   binary: [0x64]
+   time_position: 1
+   real_time: True
+   decom:
+        timestamp: 2
+        bp: 2
+        hgt: 2
+        plet: 2
+        physiocal: 1
+   
+measureEnhanced:
+   send: False
+   receive: True
+   binary: [0x44]
+   time_position: 2   
+
+measureHcFAP:
+   send: False
+   receive: True
+   binary: [0x44, 0x70]
+   nom:    
+   time_position: 2   
+   decom:
+        timestamp: 2
+        hcfap: 2        
+    
+measureReBAP:   
+   send: False
+   receive: True
+   binary: [0x44, 0x62]   
+   time_position: 2   
+   decom:
+        timestamp: 2
+        rebap: 2
+
+measureFlow:   
+   send: False
+   receive: True
+   binary: [0x44, 0x66] 
+   time_position: 2   
+   decom:
+        timestamp: 2
+        flow: 2
+   
+measureB2B:   
+   send: False
+   receive: True
+   binary: [0x62]   
+   time_position: 1
+   decom:
+        timestamp: 2
+        b2bnr: 1
+        sys: 2
+        dia: 2
+        map: 2
+        hr: 2
+        ibi: 2
+        artecfact: 2
+
+measureB2BEnhanced:   
+   send: False
+   receive: True
+   binary: [0x42]
+   time_position: 2
+
+measureB2BDerived:   
+   send: False
+   receive: True
+   binary: [0x42, 0x64]
+   time_position: 2
+   decom:
+        timestamp: 2
+        b2bnr: 1
+        fisys: 2
+        fidia: 2
+        fimap: 2
+        hr: 2
+        ibi: 2
+        dpdt: 2
+        rpp: 2
+        stpi: 2
+        dpti: 2
+        dpti_stpi: 2
+
+measureB2BReconstructed:   
+   send: False
+   receive: True
+   binary: [0x42, 0x72]
+   time_position: 2
+   decom:
+        timestamp: 2
+        b2bnr: 1
+        resys: 2
+        redia: 2
+        remap: 2
+
+measureB2BAdvanced:   
+   send: False
+   receive: True
+   binary: [0x42, 0x61]
+   time_position: 2
+   decom:
+        timestamp: 2
+        b2bnr: 1
+        sv: 2
+        co: 2
+        lvet: 2
+        zao: 2
+        cwk: 2
+        rp: 2
+        tpr: 2
+        maxaa: 2
+        bsa: 2
+        svi: 2
+        ci: 2
+        tpri: 2
+
+version:
+   send: True
+   receive: False
+   binary: [0x76] 
+
+version_hardware:
+   send: False
+   receive: True
+   binary: [0x76, 0x00] 
+
+version_application:
+   send: False
+   receive: True
+   binary: [0x76, 0x0A] 
+   
+version_bootloader:
+   send: False
+   receive: True
+   binary: [0x76, 0x0B] 
+version_unified:
+   send: False
+   receive: True
+   binary: [0x76, 0x0C] 
+version_unique:
+   send: False
+   receive: True
+   binary: [0x76, 0x0D] 
+status:
+   send: True
+   receive: True
+   binary: [0x73]
+   time_position: 1
+   real_time: True
+   decom:
+        timestamp: 2
+        mode: 1
+        error: 1
+        warning: 4
+        misc: 1
+        cuff: 1
+        physiocal: 1
+        beatstillphysiocal: 1
+        physiocalinterval: 1
+        cuffcontrol: 1
+        modelflow: 1
+            
+alive: 
+   send: False
+   receive: False
+   binary: [0x61]
+statusUpdate: 
+   send: False
+   receive: True
+   binary: [0x75]
+statusUpdateOff: 
+   send: True
+   receive: False
+   binary: [0x75, 0x00, 0x00, 0x00]
+mode: 
+   send: True
+   receive: True
+   binary: [0x6d]
+execute: 
+   send: False
+   receive: True
+   binary: [0x65]
+execute: 
+   send: False
+   receive: False
+   binary: [0x65]
+executeStart: 
+   send: True
+   receive: False
+   binary: [0x65, 0x01]
+executeStop: 
+   send: True
+   receive: False
+   binary: [0x65, 0x02]
+executeService: 
+   send: False
+   receive: False
+   binary: [0x65, 0x03]
+executeExitService: 
+   send: False
+   receive: False
+   binary: [0x65, 0x04]
+executeBootloader: 
+   send: False
+   receive: False
+   binary: [0x65, 0x05]
+executeClearError: 
+   send: False
+   receive: False
+   binary: [0x65, 0x06]
+patient: 
+   send: True
+   receive: True
+   binary: [0x70]
+   decom:
+        age:    2
+        weight: 2
+        length: 2
+        gender: 1
+cuff: 
+   send: False
+   receive: True
+   binary: [0x63]
+   decom:
+        cuffinterval:
+            command: 2
+            interval: 6
+cuffSwitch: 
+   send: True
+   receive: False
+   binary: [0x63, 0x03]
+cuffSwitchAutoOff: 
+   send: True
+   receive: False
+   binary: [0x63, 0x00]
+cuffSwitchAutoRestart: 
+   send: True
+   receive: False
+   binary: [0x63, 0xfc]
+zeroHcu: 
+   send: True
+   receive: True
+   binary: [0x7A]
+physiocal: 
+   send: True
+   receive: True
+   binary: [0x68]
+physiocalOff: 
+   send: True
+   receive: False
+   binary: [0x68, 0x00]
+physiocalOn: 
+   send: True
+   receive: False
+   binary: [0x68, 0x01]
+modelFlow: 
+   send: False
+   receive: False
+   binary: [0x66]
+modelFlowCalibStart: 
+   send: True
+   receive: False
+   binary: [0x66, 0x73]
+modelFlowCalibResults: 
+   send: True
+   receive: True
+   binary: [0x66, 0x72]
+   decom:
+        calstatus: 1
+        dsysrebap: 2
+modelFlowCalibSet: 
+   send: False
+   receive: True
+   binary: [0x66, 0x63]
+   decom:
+        calsys: 2
+        caldia: 2
+modelFlowAbort: 
+   send: True
+   receive: False
+   binary: [0x66, 0x61]
+flowCorrectionFactor: 
+   send: True
+   receive: True
+   binary: [0x6f]
+serviceTest: 
+   binary: [0x74]
+serviceStatus: 
+   binary: [0x74, 0x00]
+serviceStart: 
+   binary: [0x74, 0x01]
+serviceSteadyPressureTest: 
+   binary: [0x74, 0x01,  0x01]
+serviceSquareWaveTest: 
+   binary: [0x74, 0x01,  0x02]
+serviceExhaustValveTest: 
+   binary: [0x74, 0x01,  0x03,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceCuffValveTest: 
+   binary: [0x74, 0x01,  0x04,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceHbridgeLinearityTest: 
+   binary: [0x74, 0x01,  0x05,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceVolumeRatioTest: 
+   binary: [0x74, 0x01,  0x06,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceLeakageTest: 
+   binary: [0x74, 0x01,  0x07,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+servicePumpPerformanceTest: 
+   binary: [0x74, 0x01,  0x08,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+servicePressurePulseTest: 
+   binary: [0x74, 0x01,  0x09,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceProductionPressureSensorTest: 
+   binary: [0x74, 0x01,  0x0A,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceProductionLedControllerTest: 
+   binary: [0x74, 0x01,  0x0B,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceProductionPlethysmographTest: 
+   binary: [0x74, 0x01,  0x0C,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceHCUAmplifierTest: 
+   binary: [0x74, 0x01,  0x0D,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceProductionTemperatureSensorTest: 
+   binary: [0x74, 0x01,  0x0E,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceProductionAccelererometerTest: 
+   binary: [0x74, 0x01,  0x0F,   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+serviceStop: 
+   binary: [0x74, 0x02]
+serviceSteadyPressureResult: 
+   binary: [0x74, 0x03,  0x01]
+serviceSquareWaveResult: 
+   binary: [0x74, 0x03,  0x02]
+serviceExhaustValveResult: 
+   binary: [0x74, 0x03,  0x03]
+serviceCuffValveResult: 
+   binary: [0x74, 0x03,  0x04]
+serviceHbridgeLinearityResult: 
+   binary: [0x74, 0x03,  0x05]
+serviceVolumeRatioResult: 
+   binary: [0x74, 0x03,  0x06]
+serviceLeakageResult: 
+   binary: [0x74, 0x03,  0x07]
+servicePumpPerformanceResult: 
+   binary: [0x74, 0x03,  0x08]
+servicePressurePulseResult: 
+   binary: [0x74, 0x03,  0x09]
+serviceProductionPressureSensorResult: 
+   binary: [0x74, 0x03,  0x0A]
+serviceProductionLedControllerResult: 
+   binary: [0x74, 0x03,  0x0B]
+serviceProductionPlethysmographResult: 
+   binary: [0x74, 0x03,  0x0C]
+serviceHCUAmplifierResult: 
+   binary: [0x74, 0x03,  0x0D]
+serviceProductionTemperatureSensorResult: 
+   binary: [0x74, 0x03,  0x0E]
+serviceProductionAccelererometerResult: 
+   binary: [0x74, 0x03,  0x0F]
+
