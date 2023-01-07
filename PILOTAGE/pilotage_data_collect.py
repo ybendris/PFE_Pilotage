@@ -29,7 +29,16 @@ class DataCollect(NetworkItem, Collecteur):
          
 
     def service(self):
-        logging.info("Service global lancé")
+        """
+        Exécute le service principal du DataCollect.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+
+        Returns:
+            None
+        """
+        logging.info("Service DataCollect lancé")
         keypress = kb_func()		
         while keypress != 'q' and self.running:			
             ## les commandes claviers
@@ -55,6 +64,16 @@ class DataCollect(NetworkItem, Collecteur):
        
     
     def traiterData(self, data):
+        """
+        Traite les données reçues.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+            data (dict): Les données à traiter.
+
+        Returns:
+            None
+        """
         origine = data["expediteur"]
         paquet = data["paquet"]
         separateur = "_"
@@ -66,6 +85,16 @@ class DataCollect(NetworkItem, Collecteur):
 
       
     def traiterLog(self, log):
+        """
+        Traite les log reçues.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+            log (dict): Les log à traiter.
+
+        Returns:
+            None
+        """
         logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
 
     def define_action(self):

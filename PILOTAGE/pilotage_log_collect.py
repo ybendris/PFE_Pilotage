@@ -29,8 +29,13 @@ class LogCollector(NetworkItem, Collecteur):
     
     def service(self):
         """
-        Fonction principal du log_collect
-        Reçoit les messages (LOG ou CMD) et enregistre les logs dans une structure de données
+        Exécute le service principal du LogCollector.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+
+        Returns:
+            None
         """
         logging.info("Service global lancé")
         keypress = kb_func()		
@@ -56,9 +61,29 @@ class LogCollector(NetworkItem, Collecteur):
 
 
     def traiterData(self, data):
+        """
+        Traite les données reçues.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+            data (dict): Les données à traiter.
+
+        Returns:
+            None
+        """
         logging.info(f"Le {self.name} ne traite pas les messages de type DATA")
 
     def traiterLog(self, log):
+        """
+        Traite les log reçues.
+
+        Parameters:
+            self (object): L'objet sur lequel est appelée la méthode.
+            log (dict): Les log à traiter.
+
+        Returns:
+            None
+        """
         cle = self.datetime
         
         if cle not in self.data_dict:
