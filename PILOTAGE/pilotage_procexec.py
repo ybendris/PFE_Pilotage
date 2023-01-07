@@ -294,7 +294,7 @@ class ProcExec(NetworkItem):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
-                self.action_execproc("proc_sinus.txt")
+                self.action_execproc("proc_sinus_30s.txt")
 
             if keypress and keypress == 'z':
                 logging.info("Touche clavier 'z' appuyée")

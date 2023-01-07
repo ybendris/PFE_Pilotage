@@ -9,6 +9,7 @@
 #  _______________________________________________________ IMPORT ______________________________________________________
 
 import msvcrt
+import os
 import queue
 import threading
 from datetime import datetime
@@ -17,6 +18,8 @@ import logging
 import json
 import socket
 import sys
+import pandas as pd
+
 from abc import ABC, abstractmethod
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
@@ -377,7 +380,6 @@ class NetworkItem(ABC):
         self.running = False
         return "STOP"
 
-    
 
 class ThreadLecture(threading.Thread):
     def __init__(self, rfile, name, queue):
@@ -420,6 +422,42 @@ class ThreadEcriture(threading.Thread):
             except Empty as e:
                 logging.info("{} ended with exception: {}".format(self.name, e))
                 break
+
+
+class Collecteur:
+    def __init__(self, repertoire, date, typeDonnees, session="default"):
+        self.repertoire = repertoire
+        try:
+            os.mkdir(self.repertoire)
+        except FileExistsError:
+            pass
+
+        self.datetime = date
+        self.session = session
+        self.dataPandas = {}
+        self.typeDonnees = typeDonnees
+
+
+    def setNomSession(self, message):
+        print(message["msg"]["session"])
+        self.session=message["msg"]["session"]
+        print("NOM DE LA SESSION : " + self.session)
+
+    
+    def write_to_csv(self):
+        for cles in self.dataPandas.keys():
+            attributs = self.dataPandas[cles][0].keys()
+            dataframe = pd.DataFrame(self.dataPandas[cles], columns=attributs)
+           
+            if self.typeDonnees == "DATA":
+                format_string = "{}/{}_{}{}{}_{}.csv"
+                filename = format_string.format(self.repertoire, self.typeDonnees, self.session, '-' if self.session else '', cles, self.datetime)
+            elif self.typeDonnees == "LOG":
+                format_string = "{}/{}_{}{}{}.csv"
+                filename = format_string.format(self.repertoire, self.typeDonnees, self.session, '-' if self.session else '', self.datetime)
+
+            dataframe.to_csv(filename, sep=';', decimal=',', index=False)
+
 
 
 #  ________________________________________________ FONCTIONS GLOBALES _________________________________________________

@@ -18,8 +18,8 @@ import socket
 import time
 
 import numpy as np
-
-from pilotage_lib import NetworkItem, kb_func
+import pandas as pd
+from pilotage_lib import NetworkItem, kb_func, Collecteur
 from collections import deque
 
 #  ____________________________________________________ CONSTANTES _____________________________________________________
@@ -291,9 +291,11 @@ class SuperviseurSinus(NetworkItem):
         """
         logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
     
-    def start_mesure(self, message):
+
+    def start_mesure(self, message=None):
         logging.info("start_mesure")
         self.started = True
+
 
     def define_action(self):
         """
@@ -335,13 +337,17 @@ class SuperviseurSinus(NetworkItem):
             self.traiterMessage(self.getMessage())	
 
             ## les commandes claviers
-
+            if keypress and keypress == 'a':
+                logging.info("Touche clavier 'a' appuyée")
+                self.start_mesure()
 
             if self.started:
                 while self.data['{}.sin'.format(self.name)]:
                     d = self.data['{}.sin'.format(self.name)].popleft()
                     print(d)
-                    self.send_data(expediteur=self.name,paquet= "test", dict_message=d['data'])
+                    self.send_data(expediteur=self.name, paquet= "test", dict_message=d['data'])
+                    self.send_data(expediteur=self.name, paquet= "PAQUET2", dict_message=d['data'])
+                    self.send_log("data sent", 1)
                 
                 if time.perf_counter() > check_data+0.005: #toute les 5 ms (200hz)
                     self.remplit()
