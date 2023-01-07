@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-
 """ Nom du module : TestSendCommand"""
 
 """ Description """
@@ -46,7 +43,11 @@ class TestSendCommand(NetworkItem):
             {"nom":"stop","function": self.stop},
             {"nom":"print_list","function": self.print_list},
             {"nom":"print_dict","function": self.print_dict},
-            {"nom":"print_else","function": self.print_else}
+            {"nom":"print_else","function": self.print_else},
+            {"nom":"test_return_value","function": self.test_return_value},
+            {"nom":"test_return_list","function": self.test_return_list},
+            {"nom":"test_return_dict","function": self.test_return_dict}
+            
         ]
 
         return actions
@@ -66,6 +67,15 @@ class TestSendCommand(NetworkItem):
         print(something)
         time.sleep(2)
         logging.info("print_else fin")
+
+    def test_return_value(self):
+        return 55
+
+    def test_return_list(self):
+        return ["test1", "test2"]
+
+    def test_return_dict(self):
+        return {"data1": "oui", "data2": "toto"}
 
     """
     Processus principal du TestSendCommand
@@ -110,7 +120,18 @@ class TestSendCommand(NetworkItem):
             if keypress and keypress == 'o':
                 logging.info("Touche clavier 'o' appuyée")
                 self.waitfor(self.ask_action(destinataire='TEST2', action="print_else"),callback=self.stop)
-                
+
+            if keypress and keypress == 'p':
+                logging.info("Touche clavier 'p' appuyée")
+                self.ask_action(destinataire='HUB_SPV', action="getConnected")  
+
+            if keypress and keypress == 's':
+                logging.info("Touche clavier 's' appuyée")
+                self.ask_action(destinataire='SINUS', action="dem_accelerate")  
+
+            if keypress and keypress == 'd':
+                logging.info("Touche clavier 's' appuyée")
+                self.ask_action(destinataire='SINUS', action="dem_decelerate")  
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
@@ -122,10 +143,7 @@ class TestSendCommand(NetworkItem):
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <name>")
-        sys.exit(1)
-    name = sys.argv[1]
+    name = "TEST"
     abonnement = []
     test = TestSendCommand(host=HOST, port=PORT, name=name, abonnement=abonnement)
     # class TestSendCommand qui hérite de NetworkItem, qui redef service

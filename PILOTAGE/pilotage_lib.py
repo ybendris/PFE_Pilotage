@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """ Nom du module : Librairie"""
 
 """ Description """
@@ -11,6 +9,7 @@
 #  _______________________________________________________ IMPORT ______________________________________________________
 
 import msvcrt
+import os
 import queue
 import threading
 from datetime import datetime
@@ -19,6 +18,8 @@ import logging
 import json
 import socket
 import sys
+import pandas as pd
+
 from abc import ABC, abstractmethod
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
@@ -222,15 +223,14 @@ class NetworkItem(ABC):
                 logging.info(f"wait: {wait}")
                 del self._waitfor[commande_id] #On n'attend plus de réponse avec cet id
                 func_callback = wait["callback"] 
-                logging.info(f"commande_msg: {commande_msg}")      
                 logging.info(f"commande_msg: {commande_msg}")  
-                #TODO à vérifier si c'est suffisant      
-                """if isinstance(commande_msg, dict):
+                #TODO tester les différents cas (à savoir que commande_msg est déjà un dict vide par défaut )
+                if isinstance(commande_msg, dict):
                     func_callback(**commande_msg)
                 elif isinstance(commande_msg, list):
                     func_callback(*commande_msg)
-                else:"""
-                func_callback(commande_msg)
+                else:
+                    func_callback(commande_msg)
 
         #Traitement des commandes identifiées comme des requêtes valides (dans les actions)
         elif commande_action in self.get_action():
@@ -315,7 +315,7 @@ class NetworkItem(ABC):
         commande["params"] = list_params
         commande["msg"] = dict_message
 
-        logging.info(f"Commande envoyée :{commande}")
+        #logging.info(f"Commande envoyée :{commande}")
         self.queue_message_to_send.put(commande)
         return id
 
@@ -332,7 +332,7 @@ class NetworkItem(ABC):
         data["expediteur"] = expediteur
         data["paquet"] = paquet
         data["msg"] = dict_message
-        logging.info(f"Data envoyée :{data}")
+        #logging.info(f"Data envoyée :{data}")
         self.queue_message_to_send.put(data)
 
 
@@ -378,8 +378,8 @@ class NetworkItem(ABC):
     """
     def stop(self, commande):
         self.running = False
+        return "STOP"
 
-    
 
 class ThreadLecture(threading.Thread):
     def __init__(self, rfile, name, queue):
@@ -422,6 +422,42 @@ class ThreadEcriture(threading.Thread):
             except Empty as e:
                 logging.info("{} ended with exception: {}".format(self.name, e))
                 break
+
+
+class Collecteur:
+    def __init__(self, repertoire, date, typeDonnees, session="default"):
+        self.repertoire = repertoire
+        try:
+            os.mkdir(self.repertoire)
+        except FileExistsError:
+            pass
+
+        self.datetime = date
+        self.session = session
+        self.dataPandas = {}
+        self.typeDonnees = typeDonnees
+
+
+    def setNomSession(self, message):
+        print(message["msg"]["session"])
+        self.session=message["msg"]["session"]
+        print("NOM DE LA SESSION : " + self.session)
+
+    
+    def write_to_csv(self):
+        for cles in self.dataPandas.keys():
+            attributs = self.dataPandas[cles][0].keys()
+            dataframe = pd.DataFrame(self.dataPandas[cles], columns=attributs)
+           
+            if self.typeDonnees == "DATA":
+                format_string = "{}/{}_{}{}{}_{}.csv"
+                filename = format_string.format(self.repertoire, self.typeDonnees, self.session, '-' if self.session else '', cles, self.datetime)
+            elif self.typeDonnees == "LOG":
+                format_string = "{}/{}_{}{}{}.csv"
+                filename = format_string.format(self.repertoire, self.typeDonnees, self.session, '-' if self.session else '', self.datetime)
+
+            dataframe.to_csv(filename, sep=';', decimal=',', index=False)
+
 
 
 #  ________________________________________________ FONCTIONS GLOBALES _________________________________________________
