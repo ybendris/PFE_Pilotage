@@ -449,7 +449,7 @@ class Collecteur:
         print("NOM DE LA SESSION : " + self.session)
 
     
-    def write_to_csv(self, param):
+    def write_to_csv(self, param=None):
         for cles in self.data_dict.keys():
             attributs = self.data_dict[cles][0].keys()
             dataframe = pd.DataFrame(self.data_dict[cles], columns=attributs)

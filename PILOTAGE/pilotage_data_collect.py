@@ -97,6 +97,7 @@ class DataCollect(NetworkItem, Collecteur):
         """
         logging.info(f"Le {self.name} ne traite pas les messages de type LOG")
 
+
     def define_action(self):
         actions = [
             {"nom":"setNomSession", "function": self.setNomSession},
@@ -104,7 +105,6 @@ class DataCollect(NetworkItem, Collecteur):
             {"nom":"stop","function": self.stop}
         ]
         return actions
-
 
 
 if __name__ == '__main__':

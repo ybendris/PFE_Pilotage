@@ -250,19 +250,28 @@ class SuperviseurSinus(NetworkItem):
             val0 = int((self.last-self.first)*1000)
             nbval = int((now-self.last)*1000)
 
-            #x = np.linspace(self.last, now, nbval) (Code LA)
+            x = np.linspace(self.last, now, nbval)
             x2 = now
 
-            #y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3) (Code LA)
+            y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
             y2 = self.a0+self.a1*np.sin(2*np.pi*self.fq*x2+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x2+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x2+self.d3)
-            #y = y*100 (Code LA)
+            
+            y = y*100
             y2 = y2*100
             
             print(f"y2 {y2}")
 
-            self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':{"time":time.perf_counter(),"test_sinus":y2 }})
+            self.setData(date=self.last+self.delta, counter=val0, x=x.tolist(), y=y.tolist())
+            #self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':{"time":time.perf_counter(),"test_sinus":y2 }})
             self.last = now
  
+    def setData(self, date, counter, x, y):
+        for i in range(len(y)):
+            print(f'{x[i]} - {y[i]}')
+            self.data['{}.sin'.format(self.name)].append({'date':date, 'counter':counter, 'data':{"time":x[i],"test_sinus":y[i]}})
+
+        
+
 
     def traiterData(self, data):
         """
@@ -346,10 +355,10 @@ class SuperviseurSinus(NetworkItem):
                     d = self.data['{}.sin'.format(self.name)].popleft()
                     print(d)
                     self.send_data(expediteur=self.name, paquet= "test", dict_message=d['data'])
-                    self.send_data(expediteur=self.name, paquet= "PAQUET2", dict_message=d['data'])
+                    #self.send_data(expediteur=self.name, paquet= "PAQUET2", dict_message=d['data'])
                     self.send_log("data sent", 1)
                 
-                if time.perf_counter() > check_data+0.005: #toute les 5 ms (200hz)
+                if time.perf_counter() > check_data+0.015: 
                     self.remplit()
                     check_data = time.perf_counter()
 
