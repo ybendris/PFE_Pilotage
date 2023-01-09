@@ -81,8 +81,18 @@ class DataCollect(NetworkItem, Collecteur):
         
         if cle not in self.data_dict:
             self.data_dict[cle] = deque()
-        self.data_dict[cle].append(data["msg"])
 
+        message_data = data["msg"]
+        if isinstance(message_data, dict):
+            # Si message_data est un dictionnaire, l'ajouter à la liste
+            self.data_dict[cle].append(message_data)
+        elif isinstance(message_data, list):
+            # Si message_data est une liste, ajouter tous les dictionnaires de la liste à self.data_dict[cle]
+            self.data_dict[cle].extend(message_data)
+        else:
+            # Si new_items n'est ni un dictionnaire ni une liste, ignorer l'élément
+            pass
+        
       
     def traiterLog(self, log):
         """
