@@ -13,6 +13,9 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatButtonModule} from "@angular/material/button";
+import { MatSidenavModule } from '@angular/material/sidenav';
+import {MatListModule} from '@angular/material/list';
+import {MatMenuModule} from '@angular/material/menu';
 
 const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
 
@@ -24,17 +27,23 @@ const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
     SessionComponent,
     DashboardComponent,
   ],
-    imports: [
-        BrowserModule,
-        FormsModule,
-        SocketIoModule.forRoot(config),
-        AppRoutingModule,
-        BrowserAnimationsModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatButtonModule
-    ],
+  exports: [
+    MatSidenavModule
+  ],
+  imports: [
+      BrowserModule,
+      FormsModule,
+      SocketIoModule.forRoot(config),
+      AppRoutingModule,
+      BrowserAnimationsModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatInputModule,
+      MatButtonModule,
+      MatSidenavModule,
+      MatListModule,
+      MatMenuModule
+  ],
   providers: [],
   bootstrap: [AppComponent]
 })
