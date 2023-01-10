@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommandService } from '../../services/command.service'
 import { Commande } from '../../models/commande.model';
 import { Input } from '@angular/core';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-commande',
@@ -10,15 +11,16 @@ import { Input } from '@angular/core';
 })
 export class CommandeComponent implements OnInit {
   commande: Commande
-  @Input() sensor: string
-  @Input() content: string
+  selectedService: string = ""
+  selectedAction: string = ""
+  data_Menu= {}
+  actions: []
   @Input() sessionName: string
 
-  constructor(public command_service: CommandService) { }
+  constructor(public command_service: CommandService) {}
 
   ngOnInit(): void {
-    //emit sessionName => send_command ?
-    //Je l'ai mis dans le component sessions
+    this.rafraichir()
   }
 
   /*
@@ -26,14 +28,56 @@ export class CommandeComponent implements OnInit {
   le destinataire et la commande sont des valeurs définis par des input html
    */
   sendCommand(){
-    this.commande = {
-      destinataire: this.sensor,
-      action: "TODO",
-      msg: this.content
-
+    if(this.isSendValid()){
+      this.commande = {
+        destinataire: this.selectedService,
+        action: this.selectedAction,
+        params: [""],
+        msg: {}
+      }
+      console.log(this.commande)
+      this.command_service.sendCmd(this.commande, this.print_response.bind(this))
     }
-    console.log(this.commande)
-    this.command_service.sendCmd(this.commande)
+  }
+
+  print_response(response){
+    console.log(response)    
+  }
+
+  rafraichir(){
+    this.commande = {
+      destinataire: "CENTRAL",
+      action: "recup_action",
+      params: [""],
+      msg: {}
+    }
+    this.command_service.sendCmd(this.commande, this.acknowledge.bind(this))
+  }
+
+  acknowledge(response){
+    this.data_Menu = response
+  }
+
+  updateActions() {
+    console.log("updateActions")
+    this.actions = this.data_Menu[this.selectedService];
+  }
+
+
+ 
+  isServiceEmpty(){
+    return this.selectedService == '';
+  }
+
+ 
+  isActionEmpty() {
+    return this.selectedAction == '';
+  }
+
+ 
+
+  isSendValid() {
+    return !this.isServiceEmpty() && !this.isActionEmpty();
   }
 
 }

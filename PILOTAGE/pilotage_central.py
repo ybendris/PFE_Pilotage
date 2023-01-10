@@ -106,6 +106,11 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                 pass
 
         del self._wfile[client_to_delete.fileno()]
+        # On supprime aussi ses actions
+        for key, value in self.name_to_fillno.items():
+            if value == client_to_delete.fileno():
+                del self._actions[key]
+        
 
 
     """
@@ -128,15 +133,20 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             
             elif message_type == 'CMD':
                 destinataire = deserialized_message["destinataire"]
+                expediteur = deserialized_message["expediteur"]
                 if destinataire != '':
                     try:
                         #Traitement particulier quand on demande des information au CENTRAL
                         if destinataire == self.name:
+                            print("C4EST POUR LE CNETRAL")
                             if deserialized_message["action"] == "recup_action":
                                 deserialized_message["msg"] = self.getActions()
-                            
-                        else:
-                            pass
+                                #On lui répond
+                                destinataire = expediteur
+                                deserialized_message["action"] = "answer"
+                                str_message = json.dumps(deserialized_message)
+                                bytes_message = bytes(str_message, encoding="utf-8")
+                        
                         fillno = self.name_to_fillno[destinataire]
                         logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                         self._wfile[fillno].write(bytes_message + b"\n")
@@ -261,6 +271,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         # print(self.connection)
         self.server.delete_client(self.connection)
         print(self.server.getAbonnements())
+        print(self.server.getActions())
         super().finish()
 
     def setAbonnements(self, connection, abonnement_dict):

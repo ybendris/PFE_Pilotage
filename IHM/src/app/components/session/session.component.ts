@@ -22,13 +22,17 @@ export class SessionComponent implements OnInit {
     this.commande = {
       destinataire: "DATA_COLLECT",
       msg: {"session" : this.sessionName, "description" : this.sessionDescription},
+      params: [this.sessionName],
       action: "setNomSession"
     }
     
-    this.command_service.sendCmd(this.commande)
-    this.command_service.listenForResponse()
+    this.command_service.sendCmd(this.commande, response => {
+      this.command_service.router.navigate(['/IHM'], { state: { name: this.sessionName, description: this.sessionDescription } });
+    });
     
   }
+
+  
 
   /*
   Renvoie true si la variable sessionName est vide, et false sinon.
@@ -51,7 +55,4 @@ export class SessionComponent implements OnInit {
   isValid() {
     return !this.isNameEmpty() && !this.isDescriptionEmpty();
   }
-
-
-
 }

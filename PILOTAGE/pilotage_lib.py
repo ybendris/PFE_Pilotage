@@ -227,8 +227,9 @@ class NetworkItem(ABC):
                 logging.info(f"commande_msg: {commande_msg}")  
                 
                 #TODO tester les différents cas (à savoir que commande_msg est déjà un dict vide par défaut )
+                func_callback(commande_msg)
 
-                if isinstance(commande_msg, dict):
+                """if isinstance(commande_msg, dict):
                     logging.info("isinstance(commande_msg, dict)")
                     func_callback(**commande_msg)
                 elif isinstance(commande_msg, list):
@@ -236,7 +237,7 @@ class NetworkItem(ABC):
                     func_callback(*commande_msg)
                 else:
                     logging.info("ELSE")
-                    func_callback(commande_msg)
+                    func_callback(commande_msg)"""
 
         #Traitement des commandes identifiées comme des requêtes valides (dans les actions)
         elif commande_action in self.get_action():
@@ -447,6 +448,7 @@ class Collecteur:
     def setNomSession(self, param):
         self.session=param
         print("NOM DE LA SESSION : " + self.session)
+        return "NOM DE LA SESSION : " + self.session
 
     
     def write_to_csv(self, param=None):
