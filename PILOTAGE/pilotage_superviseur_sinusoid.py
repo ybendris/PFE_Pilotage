@@ -21,6 +21,8 @@ import numpy as np
 import pandas as pd
 from pilotage_lib import NetworkItem, kb_func, Collecteur
 from collections import deque
+from datetime import datetime
+
 
 #  ____________________________________________________ CONSTANTES _____________________________________________________
 HOST = 'localhost'
@@ -232,10 +234,10 @@ class SuperviseurSinus(NetworkItem):
             None
         """
         if 'last' not in self.__dict__ or self.last is None:
-            self.first = round(time.perf_counter(),3)
+            self.first = round(datetime.now().timestamp()*1000)
             self.last = self.first
         elif self.last < self.pause_until:
-            now = time.perf_counter()
+            now = round(datetime.now().timestamp()*1000)
             if now > self.pause_until:
                 now = self.pause_until
             val0 = int((self.last-self.first)*1000)
@@ -248,11 +250,12 @@ class SuperviseurSinus(NetworkItem):
             self.data['{}.sin'.format(self.name)].append({'date':self.last+self.delta, 'counter':val0, 'data':data_dict})
             self.last = now
         else:
-            now = time.perf_counter()			
-            val0 = int((self.last-self.first)*1000)
-			
-            nbval = int((now-self.last)*1000)
+            now = round(datetime.now().timestamp()*1000)
+            val0 = int((self.last-self.first)*5)
+            nbval = int((now-self.last))
+            
             x = np.linspace(self.last, now, nbval)
+            
             y = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
             y = y*100
 
@@ -342,8 +345,8 @@ class SuperviseurSinus(NetworkItem):
             if self.started:
                 while self.data['{}.sin'.format(self.name)]:
                     d = self.data['{}.sin'.format(self.name)].popleft()
-                    print(d)
-                    self.send_data(expediteur=self.name, paquet= "test", dict_message=d['data'])
+                    #print(d)
+                    self.send_data(expediteur=self.name, paquet= self.name, dict_message=d['data'])
                     #self.send_data(expediteur=self.name, paquet= "PAQUET2", dict_message=d['data'])
                     self.send_log("data sent", 1)
                 
@@ -360,7 +363,7 @@ class SuperviseurSinus(NetworkItem):
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
    
-    name = "SINUS"
+    name = "SINUS1"
     abonnement = []
 
     spv = SuperviseurSinus(host=HOST, port=PORT, name=name, abonnement=abonnement)

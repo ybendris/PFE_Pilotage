@@ -278,7 +278,7 @@ class NetworkItem(ABC):
         log["level"] = level
         log["expediteur"] = self.name
         log["msg"] = message
-        logging.info(f"Log envoyé :{log}")
+        #logging.info(f"Log envoyé :{log}")
         self.queue_message_to_send.put(log)
 
 
