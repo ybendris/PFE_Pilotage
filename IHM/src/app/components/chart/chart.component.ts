@@ -37,6 +37,7 @@ export class ChartComponent {
         datasets: []
       },
       options: {
+        responsive: true,
         scales: {
           x: {
             type: 'realtime',
@@ -54,6 +55,17 @@ export class ChartComponent {
         },
         interaction: {
           intersect: false
+        },
+        animation: false,
+        datasets: {
+          line: {
+            pointRadius: 0 // disable for all `'line'` datasets
+          }
+        },
+        elements: {
+          point: {
+              radius: 0 // default to disabled in all datasets
+          }
         }
       }
     });
@@ -89,7 +101,11 @@ export class ChartComponent {
 
       //MAJ des données de la courbe
       data.msg.forEach( message => {
-        let timeDate = +message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
+        console.log("ICI",typeof message.time)
+       
+        //let timeDate = message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
+        let timeDate = message.time
+        console.log(new Date(timeDate))
         this.chart.data.datasets[datasetNumber].data.push({
           x: new Date(timeDate),
           y: message.data
