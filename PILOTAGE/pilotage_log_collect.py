@@ -39,7 +39,7 @@ class LogCollector(NetworkItem, Collecteur):
         """
         logging.info("Service global lancé")
         keypress = kb_func()		
-        while keypress != 'q' and self.running:			
+        while keypress != 'q' and self.running:	
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
