@@ -25,14 +25,13 @@ export class SessionComponent implements OnInit {
       params: [this.sessionName],
       action: "setNomSession"
     }
-    
+
     this.command_service.sendCmd(this.commande, response => {
       this.command_service.router.navigate(['/IHM'], { state: { name: this.sessionName, description: this.sessionDescription } });
     });
-    
   }
 
-  
+
 
   /*
   Renvoie true si la variable sessionName est vide, et false sinon.

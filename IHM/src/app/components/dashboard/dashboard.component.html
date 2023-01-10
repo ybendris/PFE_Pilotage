@@ -1,12 +1,13 @@
 <!--Dashboard Component-->
 <mat-sidenav-container class="example-container">
-    <mat-sidenav mode="side" opened class="example-sidenav">
-        <!--Commande Component-->
-        <h1>CASYOPE</h1>
-        <app-commande [sessionName]="sessionName"></app-commande>
-    </mat-sidenav>
-    <mat-sidenav-content class="example-sidenav-content">
-        <!--Data Component-->
-        <app-data></app-data>
-    </mat-sidenav-content>
+  <mat-sidenav mode="side" opened class="example-sidenav">
+    <!--Commande Component-->
+    <h1>CASYOPE</h1>
+    <app-commande [sessionName]="sessionName"></app-commande>
+  </mat-sidenav>
+  <mat-sidenav-content class="example-sidenav-content">
+    <!--Data Component-->
+    <app-data></app-data>
+    <app-chart></app-chart>
+  </mat-sidenav-content>
 </mat-sidenav-container>

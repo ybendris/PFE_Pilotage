@@ -1,5 +1,6 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {SocketService} from "../../services/socket.service";
+import {ChartDataService} from "../../services/chart-data.service";
 
 @Component({
   selector: 'app-data',
@@ -8,7 +9,7 @@ import {SocketService} from "../../services/socket.service";
 })
 export class DataComponent implements OnInit {
 
-  constructor(public socketService: SocketService) { }
+  constructor(public socketService: SocketService, private chartDataService: ChartDataService) { }
 
   ngOnInit(): void {
     /*
@@ -16,7 +17,8 @@ export class DataComponent implements OnInit {
      */
 
     this.socketService.getData().subscribe(data => {
-      console.log("Data reçus :" + JSON.stringify(data))
+      console.log("Data reçus :" + data)
+      this.chartDataService.updateData(data)
     })
 
     this.socketService.getLog().subscribe(log => {

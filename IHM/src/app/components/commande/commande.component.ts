@@ -41,7 +41,7 @@ export class CommandeComponent implements OnInit {
   }
 
   print_response(response){
-    console.log(response)    
+    console.log(response)
   }
 
   rafraichir(){
@@ -64,17 +64,17 @@ export class CommandeComponent implements OnInit {
   }
 
 
- 
+
   isServiceEmpty(){
     return this.selectedService == '';
   }
 
- 
+
   isActionEmpty() {
     return this.selectedAction == '';
   }
 
- 
+
 
   isSendValid() {
     return !this.isServiceEmpty() && !this.isActionEmpty();

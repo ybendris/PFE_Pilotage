@@ -15,7 +15,7 @@ import {MatInputModule} from "@angular/material/input";
 import {MatButtonModule} from "@angular/material/button";
 import { MatSidenavModule } from '@angular/material/sidenav';
 import {MatSelectModule} from '@angular/material/select';
-
+import { ChartComponent } from './components/chart/chart.component';
 
 const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
 
@@ -26,6 +26,7 @@ const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
     CommandeComponent,
     SessionComponent,
     DashboardComponent,
+    ChartComponent,
   ],
   exports: [
     MatSidenavModule
