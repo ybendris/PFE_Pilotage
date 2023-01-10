@@ -82,18 +82,15 @@ class IhmSupervisor(NetworkItem, Flask):
     Le paramètre command est un dict
     """
     def on_send_command(self, command):
-        print('received message (send_command): ' + str(command))
-        print(f'Running in thread {current_thread().name}')
-        time.sleep(1) #Test asynchrone
+        print('received message (send_command): ' , command)
+        self.waitfor(id=self.ask_action(destinataire= command['destinataire'], action = command['action'], list_params=command['params']), callback=self.send_response_to_ihm)
+       
 
-        self.socketio.emit("response", command)
-        #TODO à compléter
-        #self.waitfor(id=self.ask_action(destinataire= command["destinataire"], action = command["action"], dict_message=command["msg"]), callback=self.test)
-        
+    def send_response_to_ihm(self, response):
+        print(response)
+        self.socketio.emit("response", response)
 
-    def test(self, commande):
-        print("REPONSE")  
-        self.socketio.emit("command_response", commande)
+   
 
     """
     Processus principal du procExec
@@ -105,7 +102,8 @@ class IhmSupervisor(NetworkItem, Flask):
             ## les commandes claviers
             if keypress and keypress == 'a':
                 logging.info("Touche clavier 'a' appuyée")
-                print(f'Running in thread {current_thread().name}')
+                self.ask_action(action="recup_action",destinataire="CENTRAL")
+                
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())

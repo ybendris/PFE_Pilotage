@@ -14,8 +14,8 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatButtonModule} from "@angular/material/button";
 import { MatSidenavModule } from '@angular/material/sidenav';
-import {MatListModule} from '@angular/material/list';
-import {MatMenuModule} from '@angular/material/menu';
+import {MatSelectModule} from '@angular/material/select';
+
 
 const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
 
@@ -41,8 +41,7 @@ const config: SocketIoConfig = { url: "http://localhost:5000", options: {} };
       MatInputModule,
       MatButtonModule,
       MatSidenavModule,
-      MatListModule,
-      MatMenuModule
+      MatSelectModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,4 +1,21 @@
-<input [(ngModel)]="content" placeholder="Content"/>
-
-<input [(ngModel)]="sensor" placeholder="To"/>
-<button (click)="sendCommand()">Send Command</button>
+<mat-form-field appearance="fill">
+    <mat-label>Services:</mat-label>
+    <mat-select [(ngModel)]="selectedService" (selectionChange)="updateActions()">
+        <mat-option *ngFor="let service of data_Menu | keyvalue" [value]="service.key">{{service.key}}</mat-option>
+    </mat-select>
+</mat-form-field>
+<br>
+<mat-form-field appearance="fill">
+    <mat-label>Actions:</mat-label>
+    <mat-select [(ngModel)]="selectedAction" >
+        <mat-option *ngFor="let action of actions" [value]="action">{{action}}</mat-option>
+    </mat-select>
+</mat-form-field>
+<br>
+<button mat-raised-button color="primary" (click)="sendCommand()">Envoyer commande</button>
+<br>
+<br>
+<br>
+<br>
+<br>
+<button mat-raised-button color="primary" (click)="rafraichir()">Rafraichir</button>
