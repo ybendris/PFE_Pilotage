@@ -14,6 +14,10 @@ import logging
 import csv
 import socket
 from threading import *
+import numpy as np
+import rdp as rdp
+
+import pandas as pd
 from pilotage_lib import NetworkItem, getBeginDateTime, kb_func
 
 import time
@@ -55,6 +59,12 @@ class IhmSupervisor(NetworkItem, Flask):
     Fonction qui gère la réception de data de la part du central
     """
     def traiterData(self, data):
+        data_to_reduce = data["msg"]
+        points_reformed = np.array([[point['time'], point['data']] for point in data_to_reduce])
+        df2 = pd.DataFrame(rdp.rdp(points_reformed, 1), columns=['time', 'data'])
+        df2.to_dict(orient='records')
+
+        data["msg"] = df2.to_dict(orient='records')
         self.socketio.emit("get_data",data)
 
     """

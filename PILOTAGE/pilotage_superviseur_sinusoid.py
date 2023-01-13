@@ -54,8 +54,11 @@ class SuperviseurSinus(NetworkItem):
         self.delta = time.time() - time.perf_counter()
         self.gen_param()
         self.d1 = random.random()*2*np.pi
+        self.d1 = 4.33050327647966
         self.d2 = random.random()*2*np.pi
+        self.d2 = 0.25850199708202276
         self.d3 = random.random()*2*np.pi
+        self.d3 = 5.137408143020008
         self.pause_until = 0
         
 
@@ -69,12 +72,20 @@ class SuperviseurSinus(NetworkItem):
         Returns:
             None
         """
-        self.fq=random.randint(1,6)/4
+        self.fq=random.randint(1,6)/4/1000
+        self.fq = 0.0005 # val en dur pour tester la différence avec tk_appli_visu
         self.a0=random.randint(0,20)/10
+        self.a0 = 1.5
         self.a1=random.randint(5,10)
+        self.a1 = 6
         self.a2=random.randint(0,20)/random.randint(3,8)
+        self.a2 = 0.5
         self.a3=random.randint(0,20)/random.randint(3,5)
+        self.a3 = 2.6666666666666665
+
+        logging.info(self.__dict__)
 		
+
 
     def action_regen_param(self, *karg):
         """
@@ -88,12 +99,12 @@ class SuperviseurSinus(NetworkItem):
         Returns:
             None
         """
-        print(karg)
-        fq=random.randint(1,6)/4
-        a0=random.randint(0,20)/10*10
-        a1=random.randint(5,10)
-        a2=random.randint(0,20)/random.randint(3,8)
-        a3=random.randint(0,20)/random.randint(3,5)
+        
+        self.fq=random.randint(1,6)/4/1000
+        self.a0=random.randint(0,20)/10*10
+        self.a1=random.randint(5,10)
+        self.a2=random.randint(0,20)/random.randint(3,8)
+        self.a3=random.randint(0,20)/random.randint(3,5)
         
         ytransit = None
         if 'last' in self.__dict__ and self.last is not None:
@@ -101,7 +112,7 @@ class SuperviseurSinus(NetworkItem):
             x = self.last
             ytransit = self.a0+self.a1*np.sin(2*np.pi*self.fq*x+self.d1)+self.a2*np.sin(2*2*np.pi*self.fq*x+self.d2)+self.a3*np.sin(3*2*np.pi*self.fq*x+self.d3)
             
-        self.gen_param()
+        #self.gen_param()
         if ytransit is not None:
             delay = self.next_y(ytransit)
             self.yfix = ytransit
@@ -175,6 +186,8 @@ class SuperviseurSinus(NetworkItem):
         self.d2 -= 2*2*np.pi*x*self.fq*(val-1)
         self.d3 -= 3*2*np.pi*x*self.fq*(val-1)
         self.fq *= val
+
+        logging.info(self.fq)
 
 
     def action_pause_1(self, *param):
@@ -363,7 +376,7 @@ class SuperviseurSinus(NetworkItem):
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
    
-    name = "SINUS1"
+    name = "SINUS2"
     abonnement = []
 
     spv = SuperviseurSinus(host=HOST, port=PORT, name=name, abonnement=abonnement)
