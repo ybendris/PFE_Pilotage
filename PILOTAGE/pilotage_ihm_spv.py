@@ -38,6 +38,8 @@ class IhmSupervisor(NetworkItem, Flask):
     def __init__(self, host, port, name, abonnement,import_name):
         NetworkItem.__init__(self, host, port, name, abonnement)
         Flask.__init__(self, import_name)
+
+        self.reduce = True
         
         # Initialise Flask-CORS
         self.cors = CORS(self)
@@ -59,13 +61,16 @@ class IhmSupervisor(NetworkItem, Flask):
     Fonction qui gère la réception de data de la part du central
     """
     def traiterData(self, data):
-        data_to_reduce = data["msg"]
-        points_reformed = np.array([[point['time'], point['data']] for point in data_to_reduce])
-        df2 = pd.DataFrame(rdp.rdp(points_reformed, 1), columns=['time', 'data'])
-        df2.to_dict(orient='records')
+        if self.reduce:
+            data_to_reduce = data["msg"]
+            points_reformed = np.array([[point['time'], point['data']] for point in data_to_reduce])
+            df2 = pd.DataFrame(rdp.rdp(points_reformed, 1), columns=['time', 'data'])
+            df2.to_dict(orient='records')
 
-        data["msg"] = df2.to_dict(orient='records')
-        self.socketio.emit("get_data",data)
+            data["msg"] = df2.to_dict(orient='records')
+            self.socketio.emit("get_data",data)
+        else:
+            self.socketio.emit("get_data",data)
 
     """
     Fonction qui gère la réception de log de la part du central
@@ -79,7 +84,8 @@ class IhmSupervisor(NetworkItem, Flask):
     """
     def define_action(self):
         actions = [
-            {"nom":"stop","function": self.stop}
+            {"nom":"stop","function": self.stop},
+            {"nom":"toggle_reduce","function": self.toggle_reduce}
         ]
 
         return actions
@@ -101,6 +107,8 @@ class IhmSupervisor(NetworkItem, Flask):
         self.socketio.emit("response", response)
 
    
+    def toggle_reduce(self, message = None):
+        self.reduce = not self.reduce
 
     """
     Processus principal du procExec
