@@ -1,7 +1,7 @@
 """ Nom du module : HubSupervisor"""
 
 """ Description Le superviseur du Hub, il peut communiquer avec le central"""
-""" Version 1 """
+""" Version 1.2 """
 """ Date : 03/01/2023"""
 """ Auteur : Equipe CEIS """
 """"""
@@ -12,6 +12,7 @@
 import logging
 import socket
 import serial.tools.list_ports
+import usb
 from pilotage_lib import NetworkItem, kb_func
 
 #  ____________________________________________________ CONSTANTES _____________________________________________________
@@ -42,7 +43,7 @@ class HubSPV(NetworkItem):
     Sortie:
         La liste des instruments connectés avec leur adresse
     """
-    def getConnected(self,message):
+    def getConnected(self):
         #tableau qui contiendra les adresses et noms des instruments connectés
         port_data = []
         #On parcourt tout les périphériques connectés en série (COM)
@@ -59,6 +60,17 @@ class HubSPV(NetworkItem):
                 port_data.append(info)
         #TODO ajouter la récupération des périphériques USB
         #affichage du tableau obtenu pour débuggage
+        ListePeripheriques = usb.core.find(find_all=True)
+        print("debug")
+        for d in ListePeripheriques:
+            #description entière : print(d._get_full_descriptor_str())
+            #récupérer port avec d.port_number (OU bus/adresse? avec d.bus / d.address)
+            print(d.idProduct)
+            if(d.idProduct == 0xab12 and d.idVendor == 0xab12): #ID produit (similaire pour tous les mêmes appareils d'une marque) 
+                print("Produit identifié: Nom produit")
+                # info = dict({"Name": "Nom Produit", "Adresse": d.port_number})
+                # port_data.append(info)
+        #############
         print (port_data)
         return port_data
 
