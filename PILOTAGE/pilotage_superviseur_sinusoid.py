@@ -358,9 +358,7 @@ class SuperviseurSinus(NetworkItem):
             if self.started:
                 while self.data['{}.sin'.format(self.name)]:
                     d = self.data['{}.sin'.format(self.name)].popleft()
-                    #print(d)
                     self.send_data(expediteur=self.name, paquet= self.name, dict_message=d['data'])
-                    #self.send_data(expediteur=self.name, paquet= "PAQUET2", dict_message=d['data'])
                     self.send_log("data sent", 1)
                 
                 if time.perf_counter() > check_data+0.5: 

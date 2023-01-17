@@ -142,6 +142,18 @@ class TestSendCommand(NetworkItem):
                 logging.info("Touche clavier 's' appuyée")
                 self.ask_action(destinataire='SINUS', action="dem_decelerate")  
 
+            if keypress and keypress == 'w':
+                logging.info("Touche clavier 'w' appuyée")
+                self.ask_action(destinataire='CAP', action="version")  
+
+            if keypress and keypress == 'x':
+                logging.info("Touche clavier 'x' appuyée")
+                self.ask_action(destinataire='CAP', action="patient_male")  
+
+            if keypress and keypress == 'c':
+                logging.info("Touche clavier 'c' appuyée")
+                self.ask_action(destinataire='CAP', action="executeStart")  
+
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 					
