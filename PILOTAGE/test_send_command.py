@@ -154,6 +154,30 @@ class TestSendCommand(NetworkItem):
                 logging.info("Touche clavier 'c' appuyée")
                 self.ask_action(destinataire='CAP', action="executeStart")  
 
+            if keypress and keypress == 'f':
+                logging.info("Touche clavier 'f' appuyée")
+                self.ask_action(destinataire='BAP', action="set_date")
+
+            if keypress and keypress == 'g':
+                logging.info("Touche clavier 'g' appuyée")
+                self.ask_action(destinataire='BAP', action="extra_meas")
+
+            if keypress and keypress == 'h':
+                logging.info("Touche clavier 'h' appuyée")
+                self.ask_action(destinataire='BAP', action="get_measure")
+
+            if keypress and keypress == 'j':
+                logging.info("Touche clavier 'j' appuyée")
+                self.ask_action(destinataire='BAP', action="erase")
+
+            if keypress and keypress == 'k':
+                logging.info("Touche clavier 'k' appuyée")
+                self.ask_action(destinataire='BAP', action="get_version")
+
+            if keypress and keypress == 'l':
+                logging.info("Touche clavier 'l' appuyée")
+                self.ask_action(destinataire='BAP', action="check_mem")
+
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 					
