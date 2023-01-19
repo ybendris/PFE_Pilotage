@@ -184,7 +184,11 @@ class TestSendCommand(NetworkItem):
 
             if keypress and keypress == 'v':
                 logging.info("Touche clavier 'v' appuyée")
-                self.ask_action(destinataire='BAP', action="stop")
+                self.ask_action(destinataire='BAP', action="stop_meas")
+
+            if keypress and keypress == 'b':
+                logging.info("Touche clavier 'b' appuyée")
+                self.ask_action(destinataire='BAP', action="set_nb")
 
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
