@@ -124,6 +124,35 @@ class TonoportDataDesc:
             tentative -= 1
         return res
 
+    #fonction permettant de traduire les chaines pour les infos patient
+    def formatage(chaine,cmd):       
+        chainehex=""
+
+        match cmd:
+            case "number":
+                taille=10 
+            case "name":
+                taille=28
+            case "sex":
+                taille=1
+            case other:
+                return -1
+
+        longueur=len(chaine)
+        #Erreur Si la chaine voulue est plus longue que la taille du champs max 
+        if longueur>taille:
+            return -1
+        else: 
+            #ajout de caractères pour former une chaine de la bonne longueur  
+            if (taille-longueur)>=1:
+                trame=" "
+                for i in range(taille-longueur-1):
+                    trame+=" "
+                chaine+=trame
+
+                chainehex=bytes(chaine,'utf-8')
+            return chainehex   
+
 #classe permettant l'envoi des commandes au BAP
 class TonoportCmd:
 #description d'une commande a traiter
@@ -141,6 +170,8 @@ class TonoportCmd:
     def binary(self, bytes_param = None):
         if self.mode == 'abo':          #trame pour abort la mesure qui a une forme particulière
             return bytes([self.no])
+        elif self.mode == 'pat':
+            return bytes([0x02,0x10,self.no])
         else:            
             return bytes([0x02,self.no,0x03])
 
@@ -164,7 +195,7 @@ class TonoportCmd:
             return self.data_desc.to_dico(res)
             
         #mode set : 
-        elif self.mode == 'set':
+        elif self.mode == 'set' or self.mode == 'pat':
             hlta_cr = TonoportDataDesc([{'nom':'cr','taille':2}])
             #on récupère le CR pour vérifier la réception de la commande
             res = hlta_cr.read(serie)
@@ -208,7 +239,7 @@ class SPV_BAP(NetworkItem):
         actions = [{"nom":"stop","function": self.stop},{"nom":"set_date","function":self.set_date},
         {"nom":"extra_meas","function":self.extra_meas},{"nom":"get_measure","function":self.get_measure},
         {"nom":"erase","function":self.erase},{"nom":"get_version","function":self.get_version},
-        {"nom":"check_mem","function":self.check_mem},{"nom":"abort","function":self.abort},{"nom":"stop","function":self.stop}]
+        {"nom":"check_mem","function":self.check_mem},{"nom":"abort","function":self.abort},{"nom":"stop_meas","function":self.stop_meas},{"nom":"set_nb","function":self.set_nb}]
         return actions
 
     """
@@ -320,11 +351,17 @@ class SPV_BAP(NetworkItem):
         hlta_abort = TonoportCmd(0x78, 0, 'abo')
         SPV_BAP.traite(self,hlta_abort,[data])
 
-    def stop(self):
+    def stop_meas(self):
         data = None
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_stop_measure = TonoportCmd(0x2a, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_stop_measure,[data])
+
+    #Non fonctionnel
+    def set_nb(self):
+        data = TonoportDataDesc.formatage("test","number")
+        hlta_set_nb = TonoportCmd(0x13,14,'pat')
+        SPV_BAP.traite(self,hlta_set_nb,[data])
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':
@@ -335,7 +372,7 @@ if __name__ == '__main__':
     BAP = SPV_BAP(host=HOST, port=PORT, name=name, abonnement=abonnement,out = sys.stderr)
     #connexion au port COM
     try:
-        BAP.connect('COM7')
+        BAP.connect('COM3')
         print('equipement trouve')
     except:
         print("equipement non trouve")
