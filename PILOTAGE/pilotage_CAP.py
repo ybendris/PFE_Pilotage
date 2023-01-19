@@ -20,7 +20,7 @@ import time
 import socket
 import logging
 from pilotage_lib import NetworkItem, getBeginDateTime, kb_func
-from instrument_lib import DecomNano, Nano
+from instrument_lib import DecomFinap, Finap
 
 HOST = 'localhost'
 PORT = 65432
@@ -29,37 +29,47 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 
 def _str_hex(octets):
-	chaine = ""
-	if octets:
-		for o in octets:
-			if chaine:
-				chaine += "|"+"0x{:02x}".format(o)
-			else:
-				chaine = "0x{:02x}".format(o)
-	return chaine
+    """
+    Convertit une séquence d'octets en une chaîne hexadécimale formatée.
 
+    Parameters:
+        octets (bytes): La séquence d'octets à convertir.
+
+    Returns:
+        str: La chaîne hexadécimale formatée.
+    """
+    chaine = ""
+    if octets:
+        for o in octets:
+            if chaine:
+                chaine += "|"+"0x{:02x}".format(o)
+            else:
+                chaine = "0x{:02x}".format(o)
+    return chaine
 
 class SPV_CAP(NetworkItem):
-    def __init__(self, host, port, name, abonnement, instrument, decom, mode_quiet = False, stdout = None):
-        self.retrieveCom()
+    def __init__(self, host, port, name, abonnement, mode_quiet = False, stdout = None):
+        NetworkItem.__init__(self, host, port, name, abonnement)
+        self.retrievePortCom()
         self.decomdata = {}
         self.quiet = mode_quiet
-        self.device:Nano = instrument
-        self.decom = decom
+        self.device.Finap = Finap(self.portCom)
+        self.decom = DecomFinap()
+        self.decom.add_sampletrames("nano_samples.yml")
         self.en_attente = None
         self.filters_only = []
         self.filters_mask = []
         self.log = sys.stdout
-        
-        self.process()        
-        NetworkItem.__init__(self, host, port, name, abonnement)
-
-    def retrieveCom(self):
-        #Récupère le port com sur lequel l'instrument est co (développement par les indus)
-        pass
-
-    def process(self):
         self.device.connect()
+
+    def retrievePortCom(self):
+        #Récupère le port com sur lequel l'instrument est connecté
+        self.waitfor(id=self.ask_action(destinataire= "HUB_SPV", action = "getPortCOM", list_params= ['CAP']),
+                     callback=self.setPortCom)
+
+    def setPortCom(self,reponseCom):
+        print(reponseCom)
+        self.portCom = reponseCom
 
     def print_mnemo_filters(self, only=None, mask=None, reset=False):
         if reset:
@@ -164,7 +174,7 @@ class SPV_CAP(NetworkItem):
             self.add_decom(data)
 
             
-            cond_wait = self.en_attente and self.decom.compatible_code(DecomNano.msgtrame(data['binary']), self.en_attente)					
+            cond_wait = self.en_attente and self.decom.compatible_code(DecomFinap.msgtrame(data['binary']), self.en_attente)
             cond_verb = (not self.quiet or cond_wait or data['mnemo'] in self.filters_only) and data['mnemo'] not in self.filters_mask
                 
             #self.print_log(data, not cond_verb)
@@ -547,6 +557,12 @@ class SPV_CAP(NetworkItem):
             print(mnemo, 'no data')
 
     def define_action(self):
+        """
+            Définit les actions disponibles pour l'entité.
+
+            Returns:
+                list: Une liste d'actions, chacune comprenant un nom et une fonction associée.
+        """
         actions = [{"nom": "stop", "function": self.stop}]
         liste = []
 
@@ -579,10 +595,8 @@ if __name__ == '__main__':
     logging.info('starting')
     name = "CAP"
     abonnement = []
-    nano = Nano("COM6")
-    decom = DecomNano()
-    decom.add_sampletrames("nano_samples.yml")
-    CAP_spv = SPV_CAP(HOST, PORT, name, abonnement, nano, decom)
+
+    CAP_spv = SPV_CAP(HOST, PORT, name, abonnement)
     CAP_spv.service()
 
     CAP_spv.main_socket.shutdown(socket.SHUT_RDWR)
