@@ -100,13 +100,13 @@ class TonoportDataDesc:
     #convertit date au format BAP vers un format classique (AAAA/MM/JJ HH:Min:Sec)
     def data2time(octets):
         temps = (
-                    2000 + int(octets[10]), + int(octets[11])*10,
-                    int(octets[8]) + int(octets[9])*10,
-                    int(octets[6]) + int(octets[7])*10,
-                    int(octets[4]) + int(octets[5])*10,
-                    int(octets[2]) + int(octets[3])*10,
-                    int(octets[0]) + int(octets[1])*10
-                  )
+            2000 + int(octets[10]) + int(octets[11])*10,
+            int(octets[8]) + int(octets[9])*10,
+            int(octets[6]) + int(octets[7])*10,
+            int(octets[4]) + int(octets[5])*10,
+            int(octets[2]) + int(octets[3])*10,
+            int(octets[0]) + int(octets[1])*10
+        )
 
         return "{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}".format(*temps)
 
@@ -321,7 +321,8 @@ if __name__ == '__main__':
     BAP = SPV_BAP(host=HOST, port=PORT, name=name, abonnement=abonnement,out = sys.stderr)
     #connexion au port COM
     try:
-        BAP.connect('COM3')
+        BAP.connect('COM7')
+        print('equipement trouve')
     except:
         print("equipement non trouve")
         exit(1)
