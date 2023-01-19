@@ -100,7 +100,7 @@ class TonoportDataDesc:
     #convertit date au format BAP vers un format classique (AAAA/MM/JJ HH:Min:Sec)
     def data2time(octets):
         temps = (
-                    2000 + int(octets[10]), #+ int(octets[11])*10,
+                    2000 + int(octets[10]), + int(octets[11])*10,
                     int(octets[8]) + int(octets[9])*10,
                     int(octets[6]) + int(octets[7])*10,
                     int(octets[4]) + int(octets[5])*10,
@@ -152,6 +152,9 @@ class TonoportCmd:
         #mode get : on recupere une reponse du tonoport et on l'affiche
         if self.mode == 'get': 
             res = self.data_desc.read(serie)
+            print("debug res :")
+            print(res)
+            print("fin debug")
             print("HLTA->PC", self.data_desc.to_hex(res).replace("\n","\nHLTA->PC "), file = out)
             print("HLTA->PC", self.data_desc.to_dico(res), file = out)
             return res
@@ -199,7 +202,7 @@ class SPV_BAP(NetworkItem):
         actions = [{"nom":"stop","function": self.stop},{"nom":"set_date","function":self.set_date},
         {"nom":"extra_meas","function":self.extra_meas},{"nom":"get_measure","function":self.get_measure},
         {"nom":"erase","function":self.erase},{"nom":"get_version","function":self.get_version},
-        {"nom":"check_mem","function":self.check_mem}]
+        {"nom":"check_mem","function":self.check_mem},{"nom":"abort","function":self.abort},{"nom":"stop","function":self.stop}]
         return actions
 
     """
@@ -297,6 +300,17 @@ class SPV_BAP(NetworkItem):
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_get_memory_status = TonoportCmd(0x06, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_get_memory_status,[data])
+
+    def abort(self):
+        data = None
+        hlta_abort = TonoportCmd(0x78, 0, 'abo')
+        SPV_BAP.traite(self,hlta_abort,[data])
+
+    def stop(self):
+        data = None
+        hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
+        hlta_stop_measure = TonoportCmd(0x2a, 2, 'get', data_desc = hlta_bool)
+        SPV_BAP.traite(self,hlta_stop_measure,[data])
 
 #  ________________________________________________________ MAIN _______________________________________________________
 if __name__ == '__main__':

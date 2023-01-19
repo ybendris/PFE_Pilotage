@@ -178,6 +178,14 @@ class TestSendCommand(NetworkItem):
                 logging.info("Touche clavier 'l' appuyée")
                 self.ask_action(destinataire='BAP', action="check_mem")
 
+            if keypress and keypress == 'm':
+                logging.info("Touche clavier 'm' appuyée")
+                self.ask_action(destinataire='BAP', action="abort")
+
+            if keypress and keypress == 'v':
+                logging.info("Touche clavier 'v' appuyée")
+                self.ask_action(destinataire='BAP', action="stop")
+
             #Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
 					
