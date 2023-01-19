@@ -49,18 +49,19 @@ def _str_hex(octets):
 
 class SPV_CAP(NetworkItem):
     def __init__(self, host, port, name, abonnement, mode_quiet = False, stdout = None):
+        self.decom = DecomFinap()
+        self.decom.add_sampletrames("nano_samples.yml")
         NetworkItem.__init__(self, host, port, name, abonnement)
         self.retrievePortCom()
         self.decomdata = {}
         self.quiet = mode_quiet
-        self.device.Finap = Finap(self.portCom)
-        self.decom = DecomFinap()
-        self.decom.add_sampletrames("nano_samples.yml")
+        
+        
         self.en_attente = None
         self.filters_only = []
         self.filters_mask = []
         self.log = sys.stdout
-        self.device.connect()
+        
 
     def retrievePortCom(self):
         #Récupère le port com sur lequel l'instrument est connecté
@@ -70,6 +71,9 @@ class SPV_CAP(NetworkItem):
     def setPortCom(self,reponseCom):
         print(reponseCom)
         self.portCom = reponseCom
+        self.device = Finap(self.portCom)
+        print("devi",self.device)
+        self.device.connect(self.portCom)
 
     def print_mnemo_filters(self, only=None, mask=None, reset=False):
         if reset:
@@ -565,38 +569,42 @@ class SPV_CAP(NetworkItem):
         logging.info("Service global lancé")
         keypress = kb_func()
         check_data = time.perf_counter()
-        self.device.enable_contact(self.decom.mnemo2code('alive'))
+        
+        
 
         while keypress != 'q' and self.running:
-            ## les commandes claviers
-            if keypress and keypress == 'e':
-                logging.info("Touche clavier 'e' appuyée")
-                self.send_mnemo_and_wait("executeStart") 
-
-            elif keypress and keypress == '1':
-                logging.info("Touche clavier '1' appuyée")
-                self.device.enable_contact(self.decom.mnemo2code('alive'))
-
-            elif keypress and keypress == 'f':
-                logging.info("Touche clavier 'f' appuyée")
-                self.send_mnemo_and_wait("executeStop")
-
-            elif keypress and keypress == 's':
-                logging.info("Touche clavier 's' appuyée")
-                self.send_mnemo_and_wait("patient_female")
-
-            elif keypress and keypress == 'p':
-                logging.info("Touche clavier 'p' appuyée")
-                
-                print(self.decomdata["measure"][-1])
-
             # Réception de la part des messages venant du CENTRAL
             self.traiterMessage(self.getMessage())
+            
+            if "portCom" in self.__dict__:
+                ## les commandes claviers
+                if keypress and keypress == 'e':
+                    logging.info("Touche clavier 'e' appuyée")
+                    self.send_mnemo_and_wait("executeStart") 
 
-            self.read_next()
-            if time.perf_counter() > check_data+0.5: 
-                self.send_buffered_data()
-                check_data = time.perf_counter()
+                elif keypress and keypress == '1':
+                    logging.info("Touche clavier '1' appuyée")
+                    self.device.enable_contact(self.decom.mnemo2code('alive'))
+
+                elif keypress and keypress == 'f':
+                    logging.info("Touche clavier 'f' appuyée")
+                    self.send_mnemo_and_wait("executeStop")
+
+                elif keypress and keypress == 's':
+                    logging.info("Touche clavier 's' appuyée")
+                    self.send_mnemo_and_wait("patient_female")
+
+                elif keypress and keypress == 'p':
+                    logging.info("Touche clavier 'p' appuyée")
+                    
+                    print(self.decomdata["measure"][-1])
+
+                
+
+                self.read_next()
+                if time.perf_counter() > check_data+0.5: 
+                    self.send_buffered_data()
+                    check_data = time.perf_counter()
 
             keypress = kb_func()
 

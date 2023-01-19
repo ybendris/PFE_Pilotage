@@ -60,7 +60,7 @@ class HubSPV(NetworkItem):
                 port_data.append(info)
         #TODO ajouter la récupération des périphériques USB
         #affichage du tableau obtenu pour débuggage
-        ListePeripheriques = usb.core.find(find_all=True)
+        """ListePeripheriques = usb.core.find(find_all=True)
         print("debug")
         for d in ListePeripheriques:
             #description entière : print(d._get_full_descriptor_str())
@@ -71,6 +71,7 @@ class HubSPV(NetworkItem):
                 # info = dict({"Name": "Nom Produit", "Adresse": d.port_number})
                 # port_data.append(info)
         #############
+        """
         print (port_data)
         return port_data
 
@@ -85,7 +86,7 @@ class HubSPV(NetworkItem):
     """
     def define_action(self):
         actions = [{"nom":"getConnected","function": self.getConnected},{"nom":"stop","function": self.stop},
-                   {"nom": "getPortCom", "function": self.getPortCom}, {"nom": "stop", "function": self.stop}
+                   {"nom": "getPortCOM", "function": self.getPortCom}, {"nom": "stop", "function": self.stop}
                    ]
         return actions
 
