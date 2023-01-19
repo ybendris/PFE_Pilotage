@@ -74,11 +74,19 @@ class HubSPV(NetworkItem):
         print (port_data)
         return port_data
 
+    def getPortCom(self,name):
+        portsComList = self.getConnected()
+        for dict in portsComList:
+            if name == dict["Name"]:
+                return dict["Adresse"]
+
     """
     Fonction définissant les actions du superviseur du Hub
     """
     def define_action(self):
-        actions = [{"nom":"getConnected","function": self.getConnected},{"nom":"stop","function": self.stop}]
+        actions = [{"nom":"getConnected","function": self.getConnected},{"nom":"stop","function": self.stop},
+                   {"nom": "getPortCom", "function": self.getPortCom}, {"nom": "stop", "function": self.stop}
+                   ]
         return actions
 
 

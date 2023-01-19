@@ -39,7 +39,7 @@ def _str_hex(octets):
 	return chaine
 
 
-class DecomNano:
+class DecomFinap:
     def __init__(self):
         # variables pour le ctrl du temps
         self.inittps()
@@ -96,13 +96,13 @@ class DecomNano:
         return trame[4] & 0x7F
 
     def msgtrame(trame):
-        return bytes([DecomNano.cmdgoodtrame(trame)]) + trame[5:]
+        return bytes([DecomFinap.cmdgoodtrame(trame)]) + trame[5:]
 
     def trame2mnemo(self, trame):
         if trame is not None and len(trame) > 4:
-            bcmd = DecomNano.cmdgoodtrame(trame)
-            nack = True if DecomNano.cmdtrame(trame) != DecomNano.cmdgoodtrame(trame) else False
-            msg = DecomNano.msgtrame(trame)
+            bcmd = DecomFinap.cmdgoodtrame(trame)
+            nack = True if DecomFinap.cmdtrame(trame) != DecomFinap.cmdgoodtrame(trame) else False
+            msg = DecomFinap.msgtrame(trame)
             maxi = min(4, len(msg))
             for i in range(maxi, -1, -1):
                 cmd = bytes(msg[:i])
@@ -196,7 +196,7 @@ class DecomNano:
 
         return decommutation
 
-class Nano:
+class Finap:
     def __init__(self, port, output=None):
         self.port = port
         self.serie = None
@@ -293,7 +293,7 @@ class Nano:
             'direction': "PC->FINAP",
             'sending-time': time.perf_counter(),
             'binary': trame,
-            'cmd': DecomNano.cmdtrame(trame),
+            'cmd': DecomFinap.cmdtrame(trame),
             #				'mnemo':self._str_cmd(trame),
             'return': None
         }
@@ -409,12 +409,12 @@ class Nano:
             trame = trame_read['binary']
             data = {
                 'direction': "FINAP->PC",
-                'cmd': DecomNano.cmdgoodtrame(trame),
+                'cmd': DecomFinap.cmdgoodtrame(trame),
                 #						'mnemo':desc,
                 'reception-time': trame_read['time'],
                 'binary': trame,
                 'resp': trame[4:-1],
-                'cr': 'OK' if DecomNano.cmdgoodtrame(trame) == DecomNano.cmdtrame(trame) else 'KO',
+                'cr': 'OK' if DecomFinap.cmdgoodtrame(trame) == DecomFinap.cmdtrame(trame) else 'KO',
             }
 
             return data
