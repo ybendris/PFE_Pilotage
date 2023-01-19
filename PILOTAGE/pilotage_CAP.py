@@ -48,6 +48,19 @@ def _str_hex(octets):
     return chaine
 
 class SPV_CAP(NetworkItem):
+    """
+        Classe qui gère les communications avec le CAP.
+        Elle hérite de la classe NetworkItem pour les fonctionnalités de base de communication.
+        Elle utilise également la classe DecomFinap pour la décompression des trames de données.
+
+        Parameters :
+        host: l'adresse IP de l'hôte de l'instrument
+        port: le port de communication de l'instrument
+        name: le nom de l'instrument
+        abonnement: les informations d'abonnement pour la connexion au réseau
+        mode_quiet: désactive la sortie standard (False par défaut)
+        stdout: un objet de sortie pour remplacer la sortie standard (None par défaut)
+    """
     def __init__(self, host, port, name, abonnement, mode_quiet = False, stdout = None):
         self.decom = DecomFinap()
         self.decom.add_sampletrames("nano_samples.yml")
@@ -61,19 +74,28 @@ class SPV_CAP(NetworkItem):
         self.filters_only = []
         self.filters_mask = []
         self.log = sys.stdout
+
         
 
     def retrievePortCom(self):
-        #Récupère le port com sur lequel l'instrument est connecté
+        """
+            Cette méthode récupère le port COM sur lequel l'instrument est connecté.
+        """
         self.waitfor(id=self.ask_action(destinataire= "HUB_SPV", action = "getPortCOM", list_params= ['CAP']),
                      callback=self.setPortCom)
 
     def setPortCom(self,reponseCom):
+        """
+            Cette méthode permet de définir le port série utilisé pour la communication avec le dispositif Finap.
+            Elle prend en paramètre la réponse de l'utilisateur (reponseCom) pour définir le port à utiliser.
+            Elle crée également un objet Finap en utilisant le port série choisi et se connecte à ce dernier.
+        """
         print(reponseCom)
         self.portCom = reponseCom
         self.device = Finap(self.portCom)
         print("devi",self.device)
         self.device.connect(self.portCom)
+        self.send_log("CAP connects on ()".format(self.portCom),6)
 
     def print_mnemo_filters(self, only=None, mask=None, reset=False):
         if reset:
@@ -119,10 +141,24 @@ class SPV_CAP(NetworkItem):
         #return print(*args, **kwargs)	
                 
     def print_ascii(self, mnemo, data):
+        """
+        Cette méthode affiche les données reçues sous forme d'une chaîne de caractères ASCII.
+
+        Parameters :
+        mnemo (str) : Mnémonique de la commande qui a généré les données reçues
+        data (dict) : Données reçues
+        """
         len_head = len(self.decom.mnemo2code(mnemo))
         self.print("ASCII="+data['resp'][len_head:].decode())
         
     def print_decimal(self, mnemo, data):
+        """
+            Affiche des données décimales à partir d'un dictionnaire de données en utilisant le mnemo donné.
+
+            Paramètres:
+                mnemo (str): Le mnemo associé à la commande pour laquelle les données décimales sont affichées.
+                data (dict): Les données reçues pour la commande associée au mnemo donné.
+            """
         len_head = len(self.decom.mnemo2code(mnemo))
         utile = data['resp'][len_head:]
         for i in range(int(len(utile)/4)):
@@ -132,20 +168,37 @@ class SPV_CAP(NetworkItem):
             self.print("DECIMAL=",str(g32),'['+str(g16a)+','+str(g16b)+']')
                                             
     def send_code_and_wait(self, code, mnemo_retour=None, timeout=1):
-        cmd=self.send_code(code)
+        """
+            Envoie un code à l'appareil et attend un retour spécifique ou un timeout.
+
+            Parameters :
+            code (int) : Le code à envoyer à l'appareil.
+            mnemo_retour (str, optional) : Le mnemo du message de retour attendu (par défaut None).
+            timeout (int, optional) : Le temps d'attente maximal en secondes (par défaut 1).
+
+            Returns :
+            dict : Les données reçues après envoi de `code`.
+        """
+
+        cmd = self.send_code(code)
         if cmd and mnemo_retour is None:
             mnemo_retour = cmd['mnemo']
+            self.send_log("CAP -> SPV_CAP : code : ()".format(mnemo_retour), 6)
         if cmd:
             self.print_log(cmd)
-            return self.wait_mnemo(mnemo_retour)			 
+            return self.wait_mnemo(mnemo_retour)
 
     def send_mnemo(self, mnemo):
         """
+            Cette méthode envoie un mnemo à l'équipement connecté.
+            Elle utilise le décodeur pour convertir le mnemo en un code binaire,
+            puis envoie ce code à l'équipement via la méthode send_code.
 
+            Parameters:
+            mnemo (str): mnemo à envoyer à l'équipement
 
-        :param mnemo: Le mnémonique de l'action à envoyer au CAP.
-        :return:
-            cmd : la commande envoyée
+            Return :
+            dict : a dict contenant les informations de l'envoi si tout c'est bien passé, None sinon
         """
         print(self.decom.mnemo2code(mnemo))	
         cmd = self.device.send_code(self.decom.mnemo2code(mnemo) )
@@ -185,14 +238,10 @@ class SPV_CAP(NetworkItem):
         
     def read_next(self):
         """
-        Lit les données de la prochaine mesure provenant de l'objet device en utilisant la méthode read_measure().
-        Si des données sont reçues, elles sont décomposées avec decom.completedata(data) et
-        ajoutées avec self.add_decom(data).
-        Ensuite, la fonction vérifie si les données reçues correspondent à une demande en attente (cond_wait) et
-        si elles doivent être affichées (cond_verb) en fonction des paramètres quiet, filters_only et filters_mask.
-        Si les données correspondent à une demande en attente, la variable en_attente est mise à None.
-        Returns:
-            None
+            Cette méthode lit la prochaine mesure à partir de l'appareil connecté,
+            complète les données avec des informations supplémentaires,
+            ajoute les données décomposées à l'attribut decomdata, et affiche les informations
+            si nécessaire en fonction des paramètres de filtrage.
         """
         #print("stack {} / {}".format(len(self.device.in1), len(self.device.in2)))
         
@@ -215,11 +264,11 @@ class SPV_CAP(NetworkItem):
 				
     def wait_timeout(self, timeout=0):
         """
-        Attend pendant une durée déterminée (timeout) que les prochaines données soient lues et traitées.
+        Attendez un certain temps avant de sortir de la boucle.
+        Si un message est reçu pendant ce temps, il est passé à la méthode `read_next`.
 
-        :param timeout: timeout est mesuré en secondes et prend la valeur 0 par défaut s'il n'est pas spécifié.
-        :return:
-            None
+        Arguments :
+        timeout (float, optional) : Le temps à attendre en secondes avant de sortir de la boucle. La valeur par défaut est 0.
         """
         t_max = time.perf_counter() + timeout
         cond = True
@@ -234,7 +283,7 @@ class SPV_CAP(NetworkItem):
         Ajoute une donnée decom à l'attribut decomdata.
 
         Parameters:
-        - data (dict) : un dictionnaire contenant les données decom, il doit contenir au moins une clé 'mnemo'
+        data (dict) : un dictionnaire contenant les données decom, il doit contenir au moins une clé 'mnemo'
 
         Returns:
         None
@@ -275,15 +324,11 @@ class SPV_CAP(NetworkItem):
 
     def print_log(self, data, quiet=False):
         """
-        The print_log method is used to print log information related to data.
-        The data argument must be a dictionary object containing information about the data being logged.
-        The quiet argument is a boolean indicating if the log should be printed to the console
-            or not (default is False).
-        The method will check if the data is present, and if it's not, it will print an error message.
-        Otherwise, it will create a commentaire variable, that will contain information about the data,
-            such as direction, timing, mnemo, binary, return and comment.
-        Then the method will call the self.print() method, and if the quiet argument is False,
-            it will print the commentaire to the console.
+        Cette méthode permet d'afficher des informations de log sur les données passées en paramètre.
+
+        Parameters:
+        data (dict) : Dictionnaire contenant les informations à afficher dans le log.
+        quiet (bool) : Booléen indiquant si l'affichage doit être silencieux.
         """
         if data:
             commentaire = ""
