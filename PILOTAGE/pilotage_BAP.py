@@ -72,6 +72,10 @@ class TonoportDataDesc:
                     print("test val")
                     print(val)
                     val = TonoportDataDesc.data2time(val)
+                elif nom != "cr":
+                    print(nom,val)
+                    val = ord(val)
+                    
                 if not 'trash' in 'd' or d['trash'] == False:
                     dico[nom] = val
                 deb += longueur
@@ -188,7 +192,7 @@ class TonoportCmd:
             print("fin debug")
             print("HLTA->PC", self.data_desc.to_hex(res).replace("\n","\nHLTA->PC "), file = out)
             print("HLTA->PC", self.data_desc.to_dico(res), file = out)
-            return res
+            return self.data_desc.to_dico(res)
             
         #mode set : 
         elif self.mode == 'set' or self.mode == 'pat':
@@ -208,6 +212,8 @@ class TonoportCmd:
             res2 = hlta_cr.read(serie)
             print("HLTA->PC", hlta_cr.to_hex(res2).replace("\n","\nHLTA->PC "), file = out)
             return res2
+        else:
+            return None 
 
 
 class SPV_BAP(NetworkItem):
@@ -312,7 +318,15 @@ class SPV_BAP(NetworkItem):
                                 {'nom':'trigger','taille':1, 'trash':True},
                                 ])
         hlta_get_measure = TonoportCmd(0x05, 17, 'get', data_desc = hlta_mesure) 
-        SPV_BAP.traite(self,hlta_get_measure,[data])
+        
+        
+        dict_return = SPV_BAP.traite(self,hlta_get_measure,[data])
+        #Envoie sous forme de DATA
+        #self.send_data(self.name, paquet="measure_BAP",dict_message=dict_return)
+        #Envoie sous forme de réponse à une CMD
+        return dict_return
+
+        
 
     def erase(self):
         data = None

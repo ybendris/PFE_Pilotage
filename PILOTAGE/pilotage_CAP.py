@@ -135,7 +135,14 @@ class SPV_CAP(NetworkItem):
             self.print_log(cmd)
             return self.wait_mnemo(mnemo_retour)			 
 
-    def send_mnemo(self, mnemo):	
+    def send_mnemo(self, mnemo):
+        """
+
+
+        :param mnemo: Le mnémonique de l'action à envoyer au CAP.
+        :return:
+            cmd : la commande envoyée
+        """
         print(self.decom.mnemo2code(mnemo))	
         cmd = self.device.send_code(self.decom.mnemo2code(mnemo) )
         cmd['mnemo']=mnemo
@@ -143,13 +150,13 @@ class SPV_CAP(NetworkItem):
         if cmd:
             self.print_log(cmd)
         return cmd
-
+    """
     def send_mnemo_bad_crc(self, mnemo):	
         cmd = self.device.send_badcode(self.decom.mnemo2code(mnemo))
         if cmd:
             self.print_log(cmd)
-        return cmd
-        
+        return cmd"""
+
     def send_mnemo_and_wait(self, mnemo, mnemo_retour=None):
         """envoie une commande et attend timeout secondes le mnemo de retour"""
         cmd = self.send_mnemo(mnemo)
@@ -161,9 +168,28 @@ class SPV_CAP(NetworkItem):
             return self.wait_mnemo(mnemo_retour)
             
     def wait_mnemo(self, mnemo_retour):
+        """
+        La méthode wait_mnemo() permet de configurer l'attente d'une réponse pour une commande spécifique.
+
+        Parameters:
+            mnemo_retour (str): Le mnémonique de la réponse attendue.
+
+        Returns:
+            None
+        """
         self.en_attente=self.decom.mnemo2code(mnemo_retour)
         
     def read_next(self):
+        """
+        Lit les données de la prochaine mesure provenant de l'objet device en utilisant la méthode read_measure().
+        Si des données sont reçues, elles sont décomposées avec decom.completedata(data) et
+        ajoutées avec self.add_decom(data).
+        Ensuite, la fonction vérifie si les données reçues correspondent à une demande en attente (cond_wait) et
+        si elles doivent être affichées (cond_verb) en fonction des paramètres quiet, filters_only et filters_mask.
+        Si les données correspondent à une demande en attente, la variable en_attente est mise à None.
+        Returns:
+            None
+        """
         #print("stack {} / {}".format(len(self.device.in1), len(self.device.in2)))
         
         data = self.device.read_measure()
@@ -184,6 +210,13 @@ class SPV_CAP(NetworkItem):
 			
 				
     def wait_timeout(self, timeout=0):
+        """
+        Attend pendant une durée déterminée (timeout) que les prochaines données soient lues et traitées.
+
+        :param timeout: timeout est mesuré en secondes et prend la valeur 0 par défaut s'il n'est pas spécifié.
+        :return:
+            None
+        """
         t_max = time.perf_counter() + timeout
         cond = True
         
@@ -193,6 +226,16 @@ class SPV_CAP(NetworkItem):
 
     #pour consigner la donnee et pouvoir l'enregistrer
     def add_decom(self, data):
+        """
+        Ajoute une donnée decom à l'attribut decomdata.
+
+        Parameters:
+        - data (dict) : un dictionnaire contenant les données decom, il doit contenir au moins une clé 'mnemo'
+
+        Returns:
+        None
+
+        """
         if data:
             mnemo = data['mnemo']
             decom = self.decom.decomdata(data)
@@ -227,24 +270,35 @@ class SPV_CAP(NetworkItem):
                 print(sortie)"""
 
     def print_log(self, data, quiet=False):
-        if data:		
+        """
+        The print_log method is used to print log information related to data.
+        The data argument must be a dictionary object containing information about the data being logged.
+        The quiet argument is a boolean indicating if the log should be printed to the console
+            or not (default is False).
+        The method will check if the data is present, and if it's not, it will print an error message.
+        Otherwise, it will create a commentaire variable, that will contain information about the data,
+            such as direction, timing, mnemo, binary, return and comment.
+        Then the method will call the self.print() method, and if the quiet argument is False,
+            it will print the commentaire to the console.
+        """
+        if data:
             commentaire = ""
-            
+
             if 'mnemo' in data:
                 mnemo = data['mnemo']+" ("+data['cr']+")" if 'cr' in data else data['mnemo']
-                
+
                 if 'sending-time' in data:
                     commentaire = "{} {:0.03f}s : {} : {} [{}]".format(data['direction'], data['sending-time'], mnemo, _str_hex(data['binary']), "OK" if data['return'] else "KO")
                 elif 'reception-time' in data:
-                    if 'time' in data:				  
+                    if 'time' in data:
                         commentaire = "{} {:0.03f}s : {} : {} (delta={:+0.04f}s) : {}".format(data['direction'], data['reception-time'], mnemo,
                                         data['time'], data['time'] - data['reception-time'] +data['offset'], _str_hex(data['binary']))
                     else:
                         commentaire = "{} {:0.03f}s : {} :  : {}".format(data['direction'], data['reception-time'], mnemo, _str_hex(data['binary']))
                 else:
                     commentaire = "{} error {}".format(data['direction'], data)
-                    
-            else:				
+
+            else:
                 #erreur donc
                 message = "{}".format(data['return'])
                 if 'comment' in data:
@@ -263,10 +317,16 @@ class SPV_CAP(NetworkItem):
                 print(commentaire)
                 
                 
-    def interactive(self, commands=None, data=None):	
-        #propose l'envoi de commande ou l'affichage de data
-        #commands est une liste de commandes potentielles et data une liste de donnees
-        #si commands ou data ne sont pas donn�s, on propose ceux de la bds
+    def interactive(self, commands=None, data=None):
+        """
+            Permet à l'utilisateur d'envoyer des commandes ou d'afficher des données de manière interactive.
+
+            Parameters:
+                commands (list, optional): Une liste des commandes potentielles à envoyer.
+                    Si non donné, utilise les commandes de la bds.
+                data (list, optional): Une liste des données potentielles à afficher.
+                    Si non donné, utilise les données de la bds.
+        """
         print("interactive")
         mode_quiet = self.quiet
         self.quiet = True
@@ -358,6 +418,12 @@ class SPV_CAP(NetworkItem):
 				
 
     def batch(self, progfile):
+        """
+            Exécute un script de commandes contenues dans un fichier.
+
+            Parameters:
+                progfile (str): Le nom du fichier de script de commandes à exécuter.
+        """
         with open(progfile,"r") as prog :
             for line in prog:
                 #on enleve le retour ligne
@@ -419,18 +485,7 @@ class SPV_CAP(NetworkItem):
                         retour=self.wait_mnemo(mnemo)
                         t = time.perf_counter()
                         timeout = 120
-                        while time.perf_counter() < t+timeout:
-                            self.wait_timeout(5)
-                            self.send_mnemo('serviceStatus')
-                            cr=self.wait_mnemo('serviceStatus')
-                            if cr['resp'][-1]==0:
-                                break
-                        self.send_mnemo('serviceStop')
-                        self.send_mnemo('serviceStatus')
-                        self.wait_mnemo('serviceStatus')
-                        self.send_mnemo(mnemo_result)
-                        retour = self.wait_mnemo(mnemo_result)
-                        self.print_decimal(mnemo_result, retour)
+                        self.getStatusCAPBatch(mnemo_result, t, timeout)
                 elif args[0] == "maintenance_cuff" and len(args) == 4:
                     mnemo = args[1]
                     mnemo_retour = args[2]
@@ -441,18 +496,7 @@ class SPV_CAP(NetworkItem):
                         retour=self.wait_mnemo(mnemo_retour)
                         t = time.perf_counter()
                         timeout = 30
-                        while time.perf_counter() < t+timeout:
-                            self.wait_timeout(5)
-                            self.send_mnemo('serviceStatus')
-                            cr=self.wait_mnemo('serviceStatus')
-                            if cr['resp'][-1]==0:
-                                break
-                        self.send_mnemo('serviceStop')
-                        self.send_mnemo('serviceStatus')
-                        self.wait_mnemo('serviceStatus')
-                        self.send_mnemo(mnemo_result)
-                        retour = self.wait_mnemo(mnemo_result)
-                        self.print_decimal(mnemo_result, retour)
+                        self.getStatusCAPBatch(mnemo_result, t, timeout)
                 elif args[0] == "wait" and len(args)==2 and args[1].isdecimal:
                     temps = float(args[1])
                     self.wait_timeout(temps)
@@ -485,8 +529,25 @@ class SPV_CAP(NetworkItem):
                 else:
                     print("error", line[0], line, file=sys.stderr)
 
+    def getStatusCAPBatch(self, mnemo_result, t, timeout):
+        while time.perf_counter() < t + timeout:
+            self.wait_timeout(5)
+            self.send_mnemo('serviceStatus')
+            cr = self.wait_mnemo('serviceStatus')
+            if cr['resp'][-1] == 0:
+                break
+        self.send_mnemo('serviceStop')
+        self.send_mnemo('serviceStatus')
+        self.wait_mnemo('serviceStatus')
+        self.send_mnemo(mnemo_result)
+        retour = self.wait_mnemo(mnemo_result)
+        self.print_decimal(mnemo_result, retour)
 
     def send_buffered_data(self):
+        """
+            Envoie les données mémorisées dans `self.decomdata` au serveur par mnémonique.
+            Les données envoyées sont vidées après l'envoi.
+        """
         #On crée une copie de self.decomdata
         data_to_send = self.decomdata
         #On vide self.decomdata
@@ -537,20 +598,37 @@ class SPV_CAP(NetworkItem):
                 self.send_buffered_data()
                 check_data = time.perf_counter()
 
-
-
             keypress = kb_func()
 
         logging.info("Service fini")
         
 
     def print_action(self, action):
+        """
+            Affiche l'action passée en paramètre.
+
+            Parameters:
+                action (str): L'action à afficher.
+        """
         print(action)
 
     def bds_command(self,mnemo):
+        """
+            Envoie un mnémonique à un serveur et attend la réponse.
+
+            Parameters:
+                mnemo (str): Le mnémonique à envoyer au CAP.
+        """
         cmd = self.send_mnemo_and_wait(mnemo)
 
+
     def bds_data(self, mnemo):
+        """
+            Affiche les données associées à un mnémonique donné.
+
+            Parameters:
+                mnemo (str): Le mnémonique pour lequel récupérer les données.
+        """
         if mnemo in self.decomdata:
             print(self.decomdata[mnemo][-1])
         else:
