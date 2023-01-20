@@ -7,7 +7,6 @@ import {Data} from "../models/data.model";
 })
 export class ChartDataService {
 
-  labels: string
   private _data = new BehaviorSubject<Data>({
     type: "",
     expediteur: "",

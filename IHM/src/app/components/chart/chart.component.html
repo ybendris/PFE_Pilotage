@@ -1,1 +1,31 @@
-<canvas id="dataChart"></canvas>
+<mat-drawer-container class="example-container">
+  <mat-drawer mode="side" opened="true" position="end">
+    <div *ngFor="let graph of graphs">
+      <ul *ngIf="graph.chart && graph.chart.data && graph.chart.data.datasets">
+        <ul *ngFor="let dataset of graph.chart.data.datasets">
+          <mat-form-field appearance="fill">
+            <mat-label>{{dataset.label}}</mat-label>
+            <mat-select>
+              <mat-option *ngFor="let chart of graphs" (click)="changeGraphData(dataset.label, chart.id)">
+                Graph {{chart.id}}
+              </mat-option>
+              <mat-option (click)="createNewGraphWithDataset(dataset.label)">
+                New Graph
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ul>
+
+      </ul>
+    </div>
+  </mat-drawer>
+
+
+  <mat-drawer-content>
+    <div id="graphsId">
+      <ng-container *ngFor="let graph of graphs">
+        <canvas id="dataChart{{graph.id}}"></canvas>
+      </ng-container>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>
