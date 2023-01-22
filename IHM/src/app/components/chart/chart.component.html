@@ -1,5 +1,5 @@
-<mat-drawer-container class="example-container">
-  <mat-drawer mode="side" opened="true" position="end">
+<mat-sidenav-container class="example-container">
+  <mat-sidenav mode="side" opened="true" position="end" class="example-sidenav">
     <div *ngFor="let graph of graphs">
       <ul *ngIf="graph.chart && graph.chart.data && graph.chart.data.datasets">
         <ul *ngFor="let dataset of graph.chart.data.datasets">
@@ -15,17 +15,16 @@
             </mat-select>
           </mat-form-field>
         </ul>
-
       </ul>
     </div>
-  </mat-drawer>
+  </mat-sidenav>
 
 
-  <mat-drawer-content>
+  <mat-sidenav-content class="example-sidenav-content">
     <div id="graphsId">
       <ng-container *ngFor="let graph of graphs">
-        <canvas id="dataChart{{graph.id}}"></canvas>
+        <canvas id="dataChart{{graph.id}}" class="graph"></canvas>
       </ng-container>
     </div>
-  </mat-drawer-content>
-</mat-drawer-container>
+  </mat-sidenav-content>
+</mat-sidenav-container>

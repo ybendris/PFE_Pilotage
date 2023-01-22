@@ -28,7 +28,7 @@ export class ChartComponent {
       y: {
         title: {
           display: true,
-          text: 'Value'
+          text: 'Value' //TODO unité mesure + multi axis
         }
       }
     },
@@ -60,11 +60,13 @@ export class ChartComponent {
     return color;
   }
 
-
+//Aprés chargement de l'HTML
   ngAfterViewInit(): void {
     Chart.register(ChartStreaming)
-    console.log(`dataChart${1}`)
-    console.log(this.graphs)
+    //console.log(`dataChart${1}`)
+    //console.log(this.graphs)
+
+    //Création du graph de base
     this.graphs[0].chart = new Chart('dataChart1', {
       type: 'line',
       data: {
@@ -77,14 +79,14 @@ export class ChartComponent {
     //Abonnement à data$ de chartDataService
     this.chartDataService.data$.subscribe(data => {
     //Certainement à opti plus tard
-      console.log(data)
+      console.log("New Data ", data)
 
       if(data.expediteur == ''){
         return
       }
-
+      //Récup de l'ID du graphique si la mesure est déjà présente
       let graphId = this.findGraphId(data.paquet)
-      console.log(graphId)
+      console.log("graphId ", graphId)
 
       //Si il n'y a pas de courbe de la mesure on la rajoute sur le 1er graph
       if(!graphId){
@@ -97,46 +99,52 @@ export class ChartComponent {
       }
       //recup de l'index du graphs correspondant
       let graphIndex = this.graphs.findIndex(graph => graph.id === graphId);
-      console.log(graphIndex)
-      console.log(this.graphs[graphIndex])
+      console.log("graphIndex ", graphIndex)
+      console.log("this.graphs[graphIndex] ",this.graphs[graphIndex])
 
+      //recup de l'index de la courbe du graphique correspondant
       let datasetIndex = this.graphs[graphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === data.paquet)
 
       //MAJ des données de la courbe
       data.msg.forEach( message => {
-        console.log("ICI",typeof message.time)
+        //console.log("TIME ",typeof message.time)
 
         //let timeDate = message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
         let timeDate = message.time
-        console.log(new Date(timeDate))
-        console.log(datasetIndex)
+        console.log("DATA", new Date(timeDate), message.data)
+        console.log("datasetIndex ", datasetIndex)
+        console.log("Datasets ", this.graphs[graphIndex].chart.data.datasets)
         this.graphs[graphIndex].chart.data.datasets[datasetIndex].data.push({
           x: new Date(timeDate),
           y: message.data
         });
       });
       this.graphs[graphIndex].chart.update();//Update du graphique
-
     });
 
   }
-  //TODO modif graphs[0].chart par le graph d'origine de la courbe
+
+  //Crée un nouveau graphique avec les données du label passé en paramétre
   createNewGraphWithDataset(label: string) {
     let data = {
       labels: [],
       datasets: []
     };
+    //recup l'id du graphique d'origine
     let graphId = this.findGraphId(label)
-    //recup de l'index du graphs correspondant
+    //recup de l'index du graphs d'origine
     let graphIndex = this.graphs.findIndex(graph => graph.id === graphId);
 
+    //recup l'index des données
     let datasetIndex = this.graphs[graphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === label)
+    //recup des données et suppression des données du graphique d'origine
     let dataset = this.graphs[graphIndex].chart.data.datasets.splice(datasetIndex,1)
 
     if (dataset.length > 0) {
+      //on défini l'ID du nouveau graphique
       let nextId = this.graphs[this.graphs.length - 1].id + 1
       data.datasets.push(dataset[0]);
-      // Create new chart with filtered data
+      // on crée le canvas HTML du nouveau graphique et on ajoute les données
       var canvas = document.createElement('canvas');
       canvas.id = `dataChart${nextId}`;
       document.getElementById('graphsId').appendChild(canvas);
@@ -147,10 +155,12 @@ export class ChartComponent {
         options: this.option
       });
       console.log("nextId: ", nextId)
+      //on ajoute le nouveau graphique dans la liste des graphs
       this.graphs.push({id: nextId, chart: newChart});
     }
   }
 
+  //retourne l'ID du graphique qui contient les données du label en paramètre
   findGraphId(label: string) {
     let graphId;
     this.graphs.forEach((graph) => {
@@ -163,29 +173,37 @@ export class ChartComponent {
     return graphId
   }
 
+  //permet d'afficher les données d'un graphqiue à un autre
   changeGraphData(label :string, toGraphId: number){
+    //recup de l'ID et de l'index du graph d'origine
     let fromGraphId = this.findGraphId(label)
     let fromGraphIndex = this.graphs.findIndex(graph => graph.id === fromGraphId);
+    //recup l'index du graphique de destination
     let toGraphIndex = this.graphs.findIndex(graph => graph.id === toGraphId);
 
+    //recup l'index des données
     let datasetIndex = this.graphs[fromGraphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === label)
+    //recup des données et suppréssion des données du graphqiue d'origine
     let dataset = this.graphs[fromGraphIndex].chart.data.datasets.splice(datasetIndex,1)
 
     if (dataset.length > 0) {
-      let nextId = this.graphs[this.graphs.length - 1].id + 1
+      //ajout des données dans le graphique de destination
       this.graphs[toGraphIndex].chart.data.datasets.push(dataset[0])
+    }
+    //si le graphique d'origine n'a plus de données alors on le supprime
+    if(fromGraphId !=0 && this.graphs[fromGraphIndex].chart.data.datasets.length == 0){
+      console.log("remove graph")
+      //this.removeGraph(fromGraphId)
     }
   }
 
+  //permet de supprimer un graphique -- Ne fonctionne pas
+  removeGraph(graphId: number){
 
-  /*
-  TODO Multiple graph:
-    - Switch données d'un graph à l'autre V
-    - mat-grid html evolutif
-    - Supp graph quand plus de données
-   */
-
-
-
-
+    let index = this.graphs.findIndex(graph => graph.id === graphId);
+    console.log("INDEX REMOVE", index)
+    this.graphs[index].chart.destroy()//bug
+    this.graphs.splice(index, 1);
+    console.log("REMOVE GRAPH", this.graphs)
+  }
 }
