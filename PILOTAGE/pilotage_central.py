@@ -131,7 +131,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
             #logging.info(f"- dequeued message: {deserialized_message}")
 
             str_message = json.dumps(deserialized_message)
-            self.send_log("{} received from {} : {}".format(self.name, deserialized_message["expediteur"], str_message),6)
             bytes_message = bytes(str_message, encoding="utf-8")
 
             if message_type == 'LOG' or message_type == 'DATA':
@@ -154,7 +153,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                                 bytes_message = bytes(str_message, encoding="utf-8")
                         
                         fillno = self.name_to_fillno[destinataire]
-                        #logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
+                        logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                         self._wfile[fillno].write(bytes_message + b"\n")
                         self.send_log("{} sent to {} : {}".format(self.name, destinataire,str_message), 6)
                     except KeyError:
@@ -208,6 +207,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         #logging.info("Handle")
+        self.setSocketWriter()
         self.server: Central
         self.server.add_client(self.connection)
 
@@ -226,7 +226,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         self.server.send_log("{} : actions of {} : {}".format(self.server.name, self.server.name_to_fillno,actions_dict["expediteur"], actions_dict), 7)
         self.setActions(actions_dict)
 
-        self.setSocketWriter()
+        
 
 
         # self.rfile is a file-like object created by the handler;
@@ -235,7 +235,7 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
             try:
                 # logging.info("Will Receive...")
                 message_dict = self.receive()
-                self.server.send_log("{} received from {} ".format(self.server.name,message_dict["expediteur"]), 6)
+                
                 #logging.info("Received: {}".format(message_dict))
                 if not message_dict:
                     break
