@@ -95,7 +95,7 @@ class SPV_CAP(NetworkItem):
         self.device = Finap(self.portCom)
         print("devi",self.device)
         self.device.connect(self.portCom)
-        self.send_log("CAP connects on ()".format(self.portCom),6)
+        self.send_log("CAP connected on {}".format(self.portCom),6)
 
     def print_mnemo_filters(self, only=None, mask=None, reset=False):
         if reset:
@@ -183,7 +183,7 @@ class SPV_CAP(NetworkItem):
         cmd = self.send_code(code)
         if cmd and mnemo_retour is None:
             mnemo_retour = cmd['mnemo']
-            self.send_log("CAP -> SPV_CAP : code : ()".format(mnemo_retour), 6)
+            self.send_log("CAP send to SPV_CAP : code : {}".format(mnemo_retour), 6)
         if cmd:
             self.print_log(cmd)
             return self.wait_mnemo(mnemo_retour)
@@ -202,6 +202,7 @@ class SPV_CAP(NetworkItem):
         """
         print(self.decom.mnemo2code(mnemo))	
         cmd = self.device.send_code(self.decom.mnemo2code(mnemo) )
+        self.send_log("CAP send to SPV_CAP : code : {}".format(), 6)
         cmd['mnemo']=mnemo
 
         if cmd:
@@ -737,6 +738,8 @@ if __name__ == '__main__':
 
     # server.read_thread.join()
     logging.info("{} joined ended with main thread".format(CAP_spv.read_thread.name))
+
+
 
 
 

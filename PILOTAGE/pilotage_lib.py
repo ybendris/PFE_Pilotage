@@ -108,7 +108,7 @@ class NetworkItem(ABC):
     """
     def envoi_abonnement(self):
         print("envoi_abonnement")
-        self.send_log("envoi_abonnement", 2)
+        self.send_log("{} sent to CENTRAL : {} ".format(self.name,"CENTRAL"), 6)
         message = {}
         print(message)
         try:
@@ -323,6 +323,7 @@ class NetworkItem(ABC):
         commande["msg"] = message
 
         #logging.info(f"Commande envoyée :{commande}")
+        self.send_log("() sent to () : ()".format(self.name,commande["destinataire"],commande),6)
         self.queue_message_to_send.put(commande)
         return id
 

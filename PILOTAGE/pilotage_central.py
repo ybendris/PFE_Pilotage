@@ -15,7 +15,7 @@ import socketserver
 import threading
 import json
 from queue import Queue
-from pilotage_lib import NetworkItem
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 event = threading.Event()
@@ -49,7 +49,7 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         if self.allow_reuse_address:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
-        logging.info("Socket binded")
+        #logging.info("Socket binded")
         self.server_address = self.socket.getsockname()
 
     """
@@ -57,19 +57,22 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """
     def setAbonnements(self, fillno, type):
         self._abonnement[type].append(fillno)
+        self.send_log("{} : Subcriptions = {} ".format(self.name,self._abonnement), 6)
 
     """
     Enregistre les actions d'une entité
     """
     def setActions(self, expediteur, action):
         self._actions[expediteur]= action
+        self.send_log("{} : Actions = {} ".format(self.name, self._actions), 6)
 
     """
     Enregistre le file writer de l'entité qui s'est connectée
     """
     def setWFile(self, fileno, wfile):
         self._wfile[fileno] = wfile
-        print(self._wfile)
+        self.send_log("{} : file writer add for {}".format(self.name, self.fileno), 6)
+        #print(self._wfile)
 
     """
     Récupère les abonnements de toutes entités connectées
@@ -93,7 +96,9 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
     def add_client(self, client_to_add):
         self.current_peers.append(client_to_add)
-        logging.info("Nb connecté :{}".format(len(self.current_peers)))
+        self.send_log("{} : client added ".format(self.name), 6)
+        self.send_log("{} : Amount of clients : {}".format(self.name, len(self.current_peers)), 6)
+        #logging.info("Nb connecté :{}".format(len(self.current_peers)))
 
     def delete_client(self, client_to_delete):
         # On supprime le client de la liste des clients connectés
@@ -110,21 +115,23 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         for key, value in self.name_to_fillno.items():
             if value == client_to_delete.fileno():
                 del self._actions[key]
-        
+
+        self.send_log("{} : {} removed".format(self.name, client_to_delete), 6)
 
 
     """
     Redirige les messages que le central reçoit vers les bons destinataires
     """
     def redirect_message(self, queue):
-        print("consumer")
+        #print("consumer")
         while True:
             deserialized_message = queue.get()
             message_type = deserialized_message.get("type")
 
-            logging.info(f"- dequeued message: {deserialized_message}")
+            #logging.info(f"- dequeued message: {deserialized_message}")
 
             str_message = json.dumps(deserialized_message)
+            self.send_log("{} received from {} : {}".format(self.name, deserialized_message["expediteur"], str_message),6)
             bytes_message = bytes(str_message, encoding="utf-8")
 
             if message_type == 'LOG' or message_type == 'DATA':
@@ -138,7 +145,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                     try:
                         #Traitement particulier quand on demande des information au CENTRAL
                         if destinataire == self.name:
-                            print("C4EST POUR LE CNETRAL")
                             if deserialized_message["action"] == "recup_action":
                                 deserialized_message["msg"] = self.getActions()
                                 #On lui répond
@@ -148,14 +154,19 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                                 bytes_message = bytes(str_message, encoding="utf-8")
                         
                         fillno = self.name_to_fillno[destinataire]
-                        logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
+                        #logging.info('On redirige vers {} : {}'.format(destinataire,fillno))
                         self._wfile[fillno].write(bytes_message + b"\n")
+                        self.send_log("{} sent to {} : {}".format(self.name, destinataire,str_message), 6)
                     except KeyError:
-                        logging.info("Le client n'est pas connecté")
+                        self.send_log("{} : Consumer isn't connected".format(self.name), 3)
+                        #logging.info("Le client n'est pas connecté")
+
                     except Exception as e:
-                        logging.info(e)
+                        self.send_log("{} : {} ".format(self.name, e), 3)
+                        #logging.info(e)
             else:
-                logging.info('Le message envoyé n\'a pas de type')
+                logging.info('No TYPE in message found')
+                self.send_log("{} : Le message envoyé n\'a pas de type ".format(self.name), 3)
 
          
     def get_request(self):
@@ -170,6 +181,23 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
     def recup_action(self):
         return self._actions
 
+    def send_log(self, message, level):
+        log = {}
+        log["type"] = 'LOG'
+        log["date/time"] = self.getCurrentDateTime()
+        log["level"] = level
+        log["expediteur"] = self.name
+        log["msg"] = message
+        #logging.info(f"Log envoyé :{log}")
+        self.messageQueue.put(log)
+
+
+    def getCurrentDateTime(self):
+        currentDate = datetime.now()
+        # dd/mm/YY H:M:S
+        #On formate la date et l'heure
+        dt = currentDate.strftime("%d-%m-%Y %H:%M:%S")
+        return dt
 
 
 class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
@@ -177,20 +205,25 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         self.queue = server.messageQueue
         socketserver.StreamRequestHandler.__init__(self, request, client_address, server)
 
+
     def handle(self):
-        logging.info("Handle")
+        #logging.info("Handle")
         self.server: Central
         self.server.add_client(self.connection)
 
-        logging.info("Serviced Started")
+        #logging.info("Service Started")
+        self.server.send_log("{} : Service Started".format(self.server.name), 7)
         abonnements_dict = self.receive()
-        logging.info("abonnement de {} : {}".format(abonnements_dict["expediteur"], abonnements_dict))
+        #logging.info("abonnement de {} : {}".format(abonnements_dict["expediteur"], abonnements_dict))
+        self.server.send_log("{} : Subcriptions of {} : {}".format(self.server.name,abonnements_dict["expediteur"], abonnements_dict), 7)
 
         self.setAbonnements(self.connection, abonnements_dict)
-        logging.info("name to fillno {} ".format(self.server.name_to_fillno))
+        #logging.info("name to fillno {} ".format(self.server.name_to_fillno))
+        self.server.send_log("{} : name to fillno {}".format(self.server.name,self.server.name_to_fillno), 7)
 
         actions_dict = self.receive()
-        logging.info("actions de {} : {}".format(actions_dict["expediteur"], actions_dict))
+        #logging.info("actions de {} : {}".format(actions_dict["expediteur"], actions_dict))
+        self.server.send_log("{} : actions of {} : {}".format(self.server.name, self.server.name_to_fillno,actions_dict["expediteur"], actions_dict), 7)
         self.setActions(actions_dict)
 
         self.setSocketWriter()
@@ -199,10 +232,10 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         while True:
-            # print("while ture")
             try:
                 # logging.info("Will Receive...")
                 message_dict = self.receive()
+                self.server.send_log("{} received from {} ".format(self.server.name,message_dict["expediteur"]), 6)
                 #logging.info("Received: {}".format(message_dict))
                 if not message_dict:
                     break
@@ -210,19 +243,21 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
                 # self.server.messageQueue.put(message_dict)
 
                 # self.send(message_dict)
+
                 # logging.info("Sent: {}".format(data.upper()+b"\n"))
 
                 if event.is_set():
-                    logging.info("coucou")
                     break
 
                 #print("+ enqueued message: ", message_dict)
                 self.server.messageQueue.put(message_dict)
             except EOFError:
                 print("EOFError")
+                self.server.send_log("{} : EOFError".format(self.server.name), 3)
                 break
             except (ConnectionAbortedError, ConnectionResetError):
                 print("ConnectionError")
+                self.server.send_log("{} : ConnectionError".format(self.server.name), 3)
                 break
             """except json.decoder.JSONDecodeError:
                 print("json.decoder.JSONDecodeError")
@@ -236,9 +271,10 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
     """
     def receive(self):
         message = self.rfile.readline().strip()
-        # print(f"message:  {message}")
+        print(f"message:  {message}")
         message_str = message.decode("utf-8")
-        # print(f"abonnement_str:  {abonnement_str}")
+        print(f"abonnement_str:  {message_str}")
+        self.server.send_log("{} received {}".format(self.server.name, message_str),6)
         if message_str:
             message_decoded = json.loads(message_str)
             # print(f"abonnement_decoded:  {message_decoded}")
@@ -266,6 +302,8 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         bytes_message = bytes(str_message, encoding="utf-8")
         self.wfile.write(bytes_message + b"\n")
 
+
+
     def finish(self):
         logging.info("finish")
         # print(self.connection)
@@ -290,15 +328,6 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
 
     def __str__(self) -> str:
         return pprint.pformat(self.__dict__)
-
-
-"""def printer(queue):
-    logging.info("Printer launched")
-    while True:
-        # get messages
-        message = queue.get()
-        # print the message
-        logging.info(message)"""
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 65432
