@@ -77,6 +77,7 @@ class HubSPV(NetworkItem):
 
     def getPortCom(self,name):
         portsComList = self.getConnected()
+        print(portsComList)
         for dict in portsComList:
             if name == dict["Name"]:
                 return dict["Adresse"]

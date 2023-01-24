@@ -61,7 +61,7 @@ class IhmSupervisor(NetworkItem, Flask):
     Fonction qui gère la réception de data de la part du central
     """
     def traiterData(self, data):
-        if self.reduce:
+        """if self.reduce:
             data_to_reduce = data["msg"]
             points_reformed = np.array([[point['time'], point['data']] for point in data_to_reduce])
             df2 = pd.DataFrame(rdp.rdp(points_reformed, 1), columns=['time', 'data'])
@@ -69,6 +69,18 @@ class IhmSupervisor(NetworkItem, Flask):
 
             data["msg"] = df2.to_dict(orient='records')
             self.socketio.emit("get_data",data)
+        else:"""
+        if self.reduce and data["expediteur"] == "CAP":
+            data_to_reduce = data["msg"]
+            #On récupère les clés
+            cles= data_to_reduce[0].keys()
+
+            for cle in cles:
+                if(cle != "time" and cle !="timestamp"):
+                    points_reformed = np.array([[point['time'], point[cle]] for point in data_to_reduce])
+                    df = pd.DataFrame(rdp.rdp(points_reformed, 1), columns=['time', cle])
+                    data["msg"] = df.to_dict(orient='records')
+                    self.socketio.emit("get_data",data)
         else:
             self.socketio.emit("get_data",data)
 

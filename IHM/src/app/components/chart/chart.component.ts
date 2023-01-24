@@ -1,8 +1,9 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit, ViewChild} from '@angular/core';
 import Chart from "chart.js/auto";
 import ChartStreaming from 'chartjs-plugin-streaming';
 import {ChartDataService} from "../../services/chart-data.service";
 import 'chartjs-adapter-luxon';
+import {MatTable, MatTableDataSource} from "@angular/material/table";
 
 
 
@@ -13,7 +14,12 @@ import 'chartjs-adapter-luxon';
 })
 export class ChartComponent {
 
+  @ViewChild(MatTable) table: MatTable<any>;
+
   graphs = [{id: 1, chart: null}]
+
+  displayedColumns = ['heure_tnp','sabp','dabp','mabp','hr','trigger'];
+  dataSource = [];
 
   option =  {
     responsive: true,
@@ -29,7 +35,9 @@ export class ChartComponent {
         title: {
           display: true,
           text: 'Value' //TODO unité mesure + multi axis
-        }
+        },
+        max: 2000
+
       }
     },
     interaction: {
@@ -48,8 +56,9 @@ export class ChartComponent {
     }
   }
 
-  constructor(private  chartDataService: ChartDataService) {
+  constructor(private  chartDataService: ChartDataService, private cdr: ChangeDetectorRef) {
   }
+
 
   getRandomColor() {
     var letters = '0123456789ABCDEF'.split('');
@@ -81,45 +90,65 @@ export class ChartComponent {
     //Certainement à opti plus tard
       console.log("New Data ", data)
 
-      if(data.expediteur == ''){
+      if(data.expediteur == "BAP"){
+        console.log("BAP " + data.msg)
+        console.log(this.dataSource)
+        this.dataSource.push(data.msg)
+        this.table.renderRows()
+
         return
       }
-      //Récup de l'ID du graphique si la mesure est déjà présente
-      let graphId = this.findGraphId(data.paquet)
-      console.log("graphId ", graphId)
 
-      //Si il n'y a pas de courbe de la mesure on la rajoute sur le 1er graph
-      if(!graphId){
-        this.graphs[0].chart.data.datasets.push({
-          label: data.paquet,
-          data: [],
-          borderColor: this.getRandomColor(),
-        })
-        graphId = 1
+      if(data.expediteur == '' || !data.paquet.includes("measure")){
+        return
       }
-      //recup de l'index du graphs correspondant
-      let graphIndex = this.graphs.findIndex(graph => graph.id === graphId);
-      console.log("graphIndex ", graphIndex)
-      console.log("this.graphs[graphIndex] ",this.graphs[graphIndex])
 
-      //recup de l'index de la courbe du graphique correspondant
-      let datasetIndex = this.graphs[graphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === data.paquet)
 
-      //MAJ des données de la courbe
-      data.msg.forEach( message => {
-        //console.log("TIME ",typeof message.time)
 
-        //let timeDate = message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
-        let timeDate = message.time
-        console.log("DATA", new Date(timeDate), message.data)
-        console.log("datasetIndex ", datasetIndex)
-        console.log("Datasets ", this.graphs[graphIndex].chart.data.datasets)
-        this.graphs[graphIndex].chart.data.datasets[datasetIndex].data.push({
-          x: new Date(timeDate),
-          y: message.data
-        });
+      Object.keys(data.msg).forEach( message => {
+        Object.keys(data.msg[message]).forEach(cle => {
+          if(cle != "time" && cle!="timestamp") {
+            //Récup de l'ID du graphique si la mesure est déjà présente
+            let graphId = this.findGraphId(cle)
+            console.log("graphId ", graphId)
+
+            //Si il n'y a pas de courbe de la mesure on la rajoute sur le 1er graph
+            if (!graphId) {
+              this.graphs[0].chart.data.datasets.push({
+                label: cle,
+                data: [],
+                borderColor: this.getRandomColor(),
+              })
+              graphId = 1
+            }
+            //recup de l'index du graphs correspondant
+            let graphIndex = this.graphs.findIndex(graph => graph.id === graphId);
+            console.log("graphIndex ", graphIndex)
+            console.log("this.graphs[graphIndex] ", this.graphs[graphIndex])
+
+            //recup de l'index de la courbe du graphique correspondant
+            let datasetIndex = this.graphs[graphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === cle)
+
+            //MAJ des données de la courbe
+            //console.log("TIME ",typeof message.time)
+
+            //let timeDate = message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
+            let timeDate = data.msg[message]["time"]
+            console.log("timeDate", timeDate)
+
+            console.log(cle, " : ", data.msg[message][cle])
+
+            this.graphs[graphIndex].chart.data.datasets[datasetIndex].data.push({
+              x: new Date(timeDate),
+              y: data.msg[message][cle]
+            })
+
+          }
+        })
       });
-      this.graphs[graphIndex].chart.update();//Update du graphique
+      this.graphs.forEach(graph => {
+        graph.chart.update();//Update du graphique
+      })
     });
 
   }

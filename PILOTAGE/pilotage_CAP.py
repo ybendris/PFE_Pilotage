@@ -65,7 +65,8 @@ class SPV_CAP(NetworkItem):
         self.decom = DecomFinap()
         self.decom.add_sampletrames("nano_samples.yml")
         NetworkItem.__init__(self, host, port, name, abonnement)
-        self.retrievePortCom()
+        #self.retrievePortCom()
+        self.setPortCom("COM3")
         self.decomdata = {}
         self.quiet = mode_quiet
         
@@ -604,6 +605,7 @@ class SPV_CAP(NetworkItem):
         self.decomdata = {}
         #On envoie les données enregistrée dans data_to_send par mnemo
         for mnemo in data_to_send:
+            print(list(data_to_send[mnemo]))
             self.send_data(expediteur=self.name, paquet=mnemo, dict_message=list(data_to_send[mnemo]))
 
 
@@ -666,13 +668,14 @@ class SPV_CAP(NetworkItem):
         """
         print(action)
 
-    def bds_command(self,mnemo):
+    def bds_command(self,mnemo, test):
         """
             Envoie un mnémonique à un serveur et attend la réponse.
 
             Parameters:
                 mnemo (str): Le mnémonique à envoyer au CAP.
         """
+        print(mnemo, test)
         cmd = self.send_mnemo_and_wait(mnemo)
 
 

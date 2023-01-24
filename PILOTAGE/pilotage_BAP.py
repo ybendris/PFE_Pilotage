@@ -293,7 +293,7 @@ class SPV_BAP(NetworkItem):
         else:
             return False
 
-    def set_date(self):
+    def set_date(self, msg):
         #on récupère la date à paramétrer (date courante du PC)
         data = TonoportDataDesc.time2data()
         #on prépare la commande
@@ -301,13 +301,13 @@ class SPV_BAP(NetworkItem):
         #on envoie la commande
         SPV_BAP.traite(self,hlta_set_time, [data])
 
-    def extra_meas(self):
+    def extra_meas(self, msg):
         data = None
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_extra_measure = TonoportCmd(0x1c, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_extra_measure,[data])
 
-    def get_measure(self):
+    def get_measure(self, msg):
         data = None
         hlta_mesure = TonoportDataDesc([
                                 {'nom':'heure_tnp','taille':12},
@@ -321,44 +321,45 @@ class SPV_BAP(NetworkItem):
         
         
         dict_return = SPV_BAP.traite(self,hlta_get_measure,[data])
+        print(dict_return)
         #Envoie sous forme de DATA
-        #self.send_data(self.name, paquet="measure_BAP",dict_message=dict_return)
+        self.send_data(self.name, paquet="measure_BAP",dict_message=dict_return)
         #Envoie sous forme de réponse à une CMD
         return dict_return
 
         
 
-    def erase(self):
+    def erase(self, msg):
         data = None
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_erase_data = TonoportCmd(0x07, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_erase_data,[data])
 
-    def get_version(self):
+    def get_version(self, msg):
         data = None
         hlta_version = TonoportDataDesc([{'nom':'version','taille':2}])
         hlta_get_version = TonoportCmd(0x03, 2, 'get', data_desc = hlta_version)
         SPV_BAP.traite(self,hlta_get_version,[data])
 
-    def check_mem(self):
+    def check_mem(self, msg):
         data = None
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_get_memory_status = TonoportCmd(0x06, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_get_memory_status,[data])
 
-    def abort(self):
+    def abort(self, msg):
         data = None
         hlta_abort = TonoportCmd(0x78, 0, 'abo')
         SPV_BAP.traite(self,hlta_abort,[data])
 
-    def stop_meas(self):
+    def stop_meas(self, msg):
         data = None
         hlta_bool = TonoportDataDesc([{'nom':'cr','taille':2}])
         hlta_stop_measure = TonoportCmd(0x2a, 2, 'get', data_desc = hlta_bool)
         SPV_BAP.traite(self,hlta_stop_measure,[data])
 
     #Non fonctionnel
-    def set_nb(self):
+    def set_nb(self, msg):
         data = TonoportDataDesc.formatage("test","number")
         hlta_set_nb = TonoportCmd(0x13,14,'pat')
         SPV_BAP.traite(self,hlta_set_nb,[data])
@@ -372,7 +373,7 @@ if __name__ == '__main__':
     BAP = SPV_BAP(host=HOST, port=PORT, name=name, abonnement=abonnement,out = sys.stderr)
     #connexion au port COM
     try:
-        BAP.connect('COM3')
+        BAP.connect('COM4')
         print('equipement trouve')
     except:
         print("equipement non trouve")

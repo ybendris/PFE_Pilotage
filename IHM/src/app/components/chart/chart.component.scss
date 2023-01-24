@@ -16,3 +16,15 @@ ul{
   margin: 0px;
   padding: 0px;
 }
+
+.demo-table {
+  width: 100%;
+}
+
+.demo-button-container {
+  padding-bottom: 16px;
+}
+
+.demo-button + .demo-button {
+  margin-left: 8px;
+}

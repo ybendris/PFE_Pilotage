@@ -1,10 +1,7 @@
-export interface Data {
+export interface Data<T> {
   type: string,
   expediteur: string,
   paquet: string,
-  msg: {
-    time: string,
-    data: number
-  }[]
+  msg: { [key: string]: T }
 
 }
