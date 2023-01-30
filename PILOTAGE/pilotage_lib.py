@@ -225,19 +225,8 @@ class NetworkItem(ABC):
                 del self._waitfor[commande_id] #On n'attend plus de réponse avec cet id
                 func_callback = wait["callback"] 
                 logging.info(f"commande_msg: {commande_msg}")  
-                
-                #TODO tester les différents cas (à savoir que commande_msg est déjà un dict vide par défaut )
-                func_callback(commande_msg)
 
-                """if isinstance(commande_msg, dict):
-                    logging.info("isinstance(commande_msg, dict)")
-                    func_callback(**commande_msg)
-                elif isinstance(commande_msg, list):
-                    logging.info("isinstance(commande_msg, list)")
-                    func_callback(*commande_msg)
-                else:
-                    logging.info("ELSE")
-                    func_callback(commande_msg)"""
+                func_callback(commande_msg)
 
         #Traitement des commandes identifiées comme des requêtes valides (dans les actions)
         elif commande_action in self.get_action():
@@ -309,7 +298,7 @@ class NetworkItem(ABC):
         le destinataire
         l'action
         l'id,
-        les paramètres #TODO à vérifier
+        les paramètres
         Le message en lui même sous forme de dictionnaire
     """
     def send_cmd(self, destinataire, action, id, list_params = [], message = None):
@@ -395,6 +384,14 @@ class ThreadLecture(threading.Thread):
         self.rfile = rfile
         self.queue_message_to_process = queue
 
+    """
+    Exécute la boucle de traitement de messages pour ce composant.
+
+    Reçoit des messages via la fonction "receive" et les ajoute à la file d'attente de messages à traiter.
+
+    Returns:
+    None
+    """
     def run(self):
 
         logging.info("{} started".format(self.name))
@@ -416,6 +413,14 @@ class ThreadEcriture(threading.Thread):
         self.wfile = wfile
         self.queue_message_to_send = queue
 
+    """
+        Exécute la boucle de traitement de messages pour ce composant.
+
+        Reçoit des messages via la fonction "receive" et les ajoute à la file d'attente de messages à traiter.
+
+        Returns:
+        None
+        """
     # Everything inside of run is executed in a seperate thread
     def run(self):
         logging.info("{} started".format(self.name))
@@ -445,13 +450,18 @@ class Collecteur:
         self.data_dict = {}
         self.typeDonnees = typeDonnees
 
+    """
+        Défini le nom de la session.
 
+        Returns:
+        un message de réponse
+    """
     def setNomSession(self, param):
         self.session=param
         print("NOM DE LA SESSION : " + self.session)
         return "NOM DE LA SESSION : " + self.session
 
-    
+
     def write_to_csv(self, param=None):
         for cles in self.data_dict.keys():
             attributs = self.data_dict[cles][0].keys()
