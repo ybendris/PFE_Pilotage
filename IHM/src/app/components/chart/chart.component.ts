@@ -16,19 +16,27 @@ export class ChartComponent {
 
   @ViewChild(MatTable) table: MatTable<any>;
 
+  //Liste des graphiques
   graphs = [{id: 1, chart: null}]
 
+  //Tableau de couleur pour forcer la couleur des courbes
+  //colors = ["#36a2eb", "#ff6384", "#4bc0c0", "#ff9f40", "#9966ff", "#ffcd56"]
+  //indexColor = 0
+
+  //Nom des colonnes du tableau pour le BAP
   displayedColumns = ['heure_tnp','sabp','dabp','mabp','hr','trigger'];
+  //Données du tableau
   dataSource = [];
 
+  //Option pour les graphiques avec temps réel
   option =  {
     responsive: true,
     scales: {
       x: {
         type: 'realtime',
         realtime: {
-          duration: 10000,
-          delay: 2000
+          duration: 10000, //Duration of the chart in milliseconds (how much time of data it will show)
+          delay: 2000 //Delay added to the chart in milliseconds so that upcoming values are known before lines are plotted. This makes the chart look like a continual stream rather than very jumpy on the right hand side. Specify the maximum expected delay.
         }
       },
       y: {
@@ -36,7 +44,7 @@ export class ChartComponent {
           display: true,
           text: 'Value' //TODO unité mesure + multi axis
         },
-        max: 2000
+        max: 3000
 
       }
     },
@@ -60,6 +68,7 @@ export class ChartComponent {
   }
 
 
+  //Génère une couleur aléatoire
   getRandomColor() {
     var letters = '0123456789ABCDEF'.split('');
     var color = '#';
@@ -69,8 +78,9 @@ export class ChartComponent {
     return color;
   }
 
-//Aprés chargement de l'HTML
+  //Aprés chargement de l'HTML
   ngAfterViewInit(): void {
+    //Ajouter le plugin streaming
     Chart.register(ChartStreaming)
     //console.log(`dataChart${1}`)
     //console.log(this.graphs)
@@ -87,57 +97,56 @@ export class ChartComponent {
 
     //Abonnement à data$ de chartDataService
     this.chartDataService.data$.subscribe(data => {
-    //Certainement à opti plus tard
-      console.log("New Data ", data)
+      //console.log("New Data ", data)
 
+      //Si l'expediteur est le BAP alors affiché les données dans le tableau
       if(data.expediteur == "BAP"){
-        console.log("BAP " + data.msg)
-        console.log(this.dataSource)
+        //console.log("BAP " + data.msg)
+        //console.log(this.dataSource)
         this.dataSource.push(data.msg)
         this.table.renderRows()
-
         return
       }
 
-      if(data.expediteur == '' || !data.paquet.includes("measure")){
+      //On choisit les paquets que l'on veut afficher, ici on affiche uniquement le paquet "measure"
+      //si on veut afficher tous les paquets remplacer data.paquet != "measure" par !data.paquet.includes("measure")
+      if(data.expediteur == '' || data.paquet != "measure"){ //!data.paquet.includes("measure")
         return
       }
 
-
-
+      //Boucle sur chaque trame
       Object.keys(data.msg).forEach( message => {
+        //boucle sur chaque clé de la trame
         Object.keys(data.msg[message]).forEach(cle => {
           if(cle != "time" && cle!="timestamp") {
             //Récup de l'ID du graphique si la mesure est déjà présente
             let graphId = this.findGraphId(cle)
-            console.log("graphId ", graphId)
+            //console.log("graphId ", graphId)
 
             //Si il n'y a pas de courbe de la mesure on la rajoute sur le 1er graph
             if (!graphId) {
               this.graphs[0].chart.data.datasets.push({
                 label: cle,
                 data: [],
-                borderColor: this.getRandomColor(),
+                borderColor: this.getRandomColor(), //this.colors[this.indexColor] //si couleur fixé
               })
+              //this.indexColor++ //si couleur fixé
               graphId = 1
             }
             //recup de l'index du graphs correspondant
             let graphIndex = this.graphs.findIndex(graph => graph.id === graphId);
-            console.log("graphIndex ", graphIndex)
-            console.log("this.graphs[graphIndex] ", this.graphs[graphIndex])
+            //console.log("graphIndex ", graphIndex)
+            //console.log("this.graphs[graphIndex] ", this.graphs[graphIndex])
 
             //recup de l'index de la courbe du graphique correspondant
             let datasetIndex = this.graphs[graphIndex].chart.data.datasets.findIndex(dataSet => dataSet.label === cle)
 
-            //MAJ des données de la courbe
-            //console.log("TIME ",typeof message.time)
-
-            //let timeDate = message.time.replace(/\D/g,'');//Supprime tout ce qui n'est pas un chiffre
+            //On récupére la date de la trame
             let timeDate = data.msg[message]["time"]
-            console.log("timeDate", timeDate)
+            //console.log("timeDate", timeDate)
+            //console.log(cle, " : ", data.msg[message][cle])
 
-            console.log(cle, " : ", data.msg[message][cle])
-
+            //MAJ des données de la courbe
             this.graphs[graphIndex].chart.data.datasets[datasetIndex].data.push({
               x: new Date(timeDate),
               y: data.msg[message][cle]
@@ -147,7 +156,7 @@ export class ChartComponent {
         })
       });
       this.graphs.forEach(graph => {
-        graph.chart.update();//Update du graphique
+        graph.chart.update();//Update de tous les graphiques, une fois toutes les données ajoutées pour éviter le lag
       })
     });
 
@@ -226,13 +235,15 @@ export class ChartComponent {
     }
   }
 
-  //permet de supprimer un graphique -- Ne fonctionne pas
+  //permet de supprimer un graphique -- Ne fonctionne pas -- bug par la suite lorsque l'on veut ajouter les données de la dernière mesure du graphique supprimé
   removeGraph(graphId: number){
-
+    //recup de l'index à supprimer
     let index = this.graphs.findIndex(graph => graph.id === graphId);
-    console.log("INDEX REMOVE", index)
+    //console.log("INDEX REMOVE", index)
+    //destroy du graphique
     this.graphs[index].chart.destroy()//bug
+    //suppression du graphique de la liste graphs
     this.graphs.splice(index, 1);
-    console.log("REMOVE GRAPH", this.graphs)
+    //console.log("REMOVE GRAPH", this.graphs)
   }
 }

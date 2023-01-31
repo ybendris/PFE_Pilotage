@@ -17,7 +17,7 @@ export class DataComponent implements OnInit {
      */
 
     this.socketService.getData().subscribe(data => {
-      console.log("Data reçus :" + data)
+      //console.log("Data reçus :" + data)
       this.chartDataService.updateData(data)
     })
 

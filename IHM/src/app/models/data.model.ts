@@ -3,5 +3,4 @@ export interface Data<T> {
   expediteur: string,
   paquet: string,
   msg: { [key: string]: T }
-
 }

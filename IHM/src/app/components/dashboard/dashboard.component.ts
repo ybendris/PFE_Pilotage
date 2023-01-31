@@ -11,7 +11,7 @@ export class DashboardComponent {
   sessionDescription = ''
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
-    console.log(this.router.getCurrentNavigation().extras.state)
+    //console.log(this.router.getCurrentNavigation().extras.state)
     this.sessionName = this.router.getCurrentNavigation().extras.state["name"]
     this.sessionDescription = this.router.getCurrentNavigation().extras.state["description"]
   }

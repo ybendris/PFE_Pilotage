@@ -8,17 +8,23 @@ import { CommandService } from 'src/app/services/command.service';
   styleUrls: ['./session.component.scss']
 })
 export class SessionComponent implements OnInit {
-  commande: Commande
-  constructor(public command_service: CommandService) { }
+
+  constructor(public command_service: CommandService) {
+  }
+
   ngOnInit(): void {
-    //
   }
   sessionName = ''
   sessionDescription = ''
+  commande: Commande
 
+  /*
+  Envoie sous forme de commande, le nom de la session ainsi que sa description à la partie pilotage.
+  Il attend la réponse de la partie pilotage avant de rediriger l’utilisateur vers le dashboard.
+   */
   create_session(){
-    console.log("Session Name:" + this.sessionName)
-    console.log("Description" + this.sessionDescription)
+    //console.log("Session Name:" + this.sessionName)
+    //console.log("Description" + this.sessionDescription)
     this.commande = {
       destinataire: "DATA_COLLECT",
       msg: {"session" : this.sessionName, "description" : this.sessionDescription},
