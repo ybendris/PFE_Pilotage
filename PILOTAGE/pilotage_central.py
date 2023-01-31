@@ -94,12 +94,36 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
         """request_queue_size = nombre de connexion en attente possible"""
         self.socket.listen(self.request_queue_size)
 
+    """
+    Ajoute un client à la liste self.current_peers et envoie des logs de l'ajout et de la taille de la liste.
+    
+    Ajoute un client à la liste self.current_peers et envoie des logs annonçant l'ajout et la taille actuelle de la liste des clients.
+    
+    Parameters:
+    client_to_add (object): le client à ajouter à la liste self.current_peers.
+    
+    Returns:
+    None
+    """
+
     def add_client(self, client_to_add):
         self.current_peers.append(client_to_add)
         self.send_log("{} : client added ".format(self.name), 6)
         self.send_log("{} : Amount of clients : {}".format(self.name, len(self.current_peers)), 6)
         #logging.info("Nb connecté :{}".format(len(self.current_peers)))
 
+    """
+    Supprime un client de la liste des clients connectés et de ses abonnements.
+
+    Les données associées au client, telles que ses abonnements et ses actions, sont également supprimées.
+    Envoie un log pour signaler la suppression du client.
+
+    Parameters:
+    client_to_delete (Client): le client à supprimer.
+
+    Returns:
+    None
+    """
     def delete_client(self, client_to_delete):
         # On supprime le client de la liste des clients connectés
         self.current_peers.remove(client_to_delete)
@@ -120,7 +144,21 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
     """
-    Redirige les messages que le central reçoit vers les bons destinataires
+    Redirige le message vers un client spécifique ou vers tous les clients concernés.
+
+    La fonction reçoit une file d'attente de messages, met le message en file d'attente, le sérialise 
+    et l'envoie au destinataire.
+    Le message peut être de type LOG, DATA ou CMD.
+
+    Pour les types LOG et DATA, le message est envoyé à tous les clients abonnés à ces types.
+    Pour le type CMD, le message est envoyé au destinataire spécifique mentionné dans le message, 
+    ou une réponse est envoyée à l'expéditeur si le destinataire est le serveur central.
+
+    Si le destinataire n'est pas connecté, un message de journal est envoyé au serveur. S'il y a une exception, 
+    le message d'exception est également enregistré.
+
+    Parameters :
+    queue (queue) : La file d'attente de messages à partir de laquelle le message doit être retiré de la file d'attente.
     """
     def redirect_message(self, queue):
         #print("consumer")
@@ -167,7 +205,13 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
                 logging.info('No TYPE in message found')
                 self.send_log("{} : Le message envoyé n\'a pas de type ".format(self.name), 3)
 
-         
+    """
+        Récupère la requête et l'adresse du client à partir de la socket.overridden.
+
+        Returns:
+            conn : Une connexion
+            address : une adresse.
+    """
     def get_request(self):
         #  Get the request and client address from the socket.overridden.
 
@@ -177,9 +221,24 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
         return conn, address
 
+
     def recup_action(self):
+        """
+        Cette fonction retourne la liste des actions enregistrées.
+
+        Returns:
+            dict: Les actions enregistrées.
+        """
         return self._actions
 
+    """
+        Fonction d'envoie de log
+
+        Paramètres
+        ----------
+        message : le message du log
+        level : le niveau du log
+    """
     def send_log(self, message, level):
         log = {}
         log["type"] = 'LOG'
@@ -204,7 +263,21 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         self.queue = server.messageQueue
         socketserver.StreamRequestHandler.__init__(self, request, client_address, server)
 
+    """
+    Cette méthode effectue les opérations suivantes :
+        1. Définit l'auteur de la socket
+        2. Ajoute la connexion au serveur `Central`.
+        3. Enregistre le démarrage du service
+        4. Reçoit les informations d'abonnement et les enregistre
+        5. Définit les abonnements pour la connexion
+        6. Reçoit les informations sur les actions et les enregistre
+        7. Définit les actions
+        8. Reçoit continuellement des messages et les ajoute à la file d'attente des messages du serveur.
+        9. S'il y a une erreur EOFError ou ConnectionError, l'enregistre et sort de la boucle.
 
+        Return : 
+        None
+        """
     def handle(self):
         #logging.info("Handle")
         self.setSocketWriter()
@@ -267,7 +340,14 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
                 print(f"Exception {e}")"""
 
     """
-    Fonction de réception de message
+    Reçoit et décode un message reçu à partir de la connexion client.
+
+    Le message est lu à partir de l'objet rfile, décodé en UTF-8 et converti en objet Python à l'aide de json.loads. 
+    Si le message est vide, une dict vide est retourné.
+    Le message reçu est logué avec la méthode send_log de self.server.
+
+    Return :
+    msg_decoded (dict) : Le message décodé en objet Python
     """
     def receive(self):
         message = self.rfile.readline().strip()
@@ -303,7 +383,13 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         self.wfile.write(bytes_message + b"\n")
 
 
-
+    """
+    Supprime la connexion avec le client, ses abonnements et ses actions quand celui-ci se déconnecte du Central
+    Termine proprement le Thread fils spécifique à ce client
+    
+    Return:
+    None
+    """
     def finish(self):
         logging.info("finish")
         # print(self.connection)
@@ -312,6 +398,13 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
         print(self.server.getActions())
         super().finish()
 
+    """
+    Enregistre les abonnements d'un client dans une liste de 2 dictionnaires (DATA et LOG)
+    
+    Parameters:
+    connection : le client
+    abonnement_dict : les abonnements du client
+    """
     def setAbonnements(self, connection, abonnement_dict):
         self.server.name_to_fillno[abonnement_dict["expediteur"]] = connection.fileno()
         for type in abonnement_dict['msg']:
@@ -319,6 +412,12 @@ class MyThreadedTCPRequestHandler(socketserver.StreamRequestHandler):
 
         print(self.server.getAbonnements())
 
+    """
+        Enregistre les actions d'un client dans un dictionnaire 
+
+        Parameters:
+        actions_dict : les actions du client
+        """
     def setActions(self, actions_dict):
         self.server.setActions(actions_dict["expediteur"], actions_dict["msg"])
 

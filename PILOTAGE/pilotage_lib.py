@@ -461,7 +461,19 @@ class Collecteur:
         print("NOM DE LA SESSION : " + self.session)
         return "NOM DE LA SESSION : " + self.session
 
+    """
+    Ecrit les données stockées dans self.data_dict dans des fichiers CSV.
 
+    Les noms de fichier sont générés en fonction de self.typeDonnees, self.session, cles et self.datetime. 
+    Les données sont stockées dans des dataframes de pandas avant d'être écrites dans des fichiers CSV 
+    vec le séparateur ';' et le décimal ','.
+
+    Parameters:
+    param (None): paramètre non utilisé, présent pour des raisons de compatibilité avec une API existante.
+
+    Returns:
+    None
+    """
     def write_to_csv(self, param=None):
         for cles in self.data_dict.keys():
             attributs = self.data_dict[cles][0].keys()
@@ -479,6 +491,18 @@ class Collecteur:
 
 
 #  ________________________________________________ FONCTIONS GLOBALES _________________________________________________
+
+    """
+    Retourne la date et l'heure courante sous forme de chaîne de caractères formatée.
+    
+    La date et l'heure sont obtenues à l'aide de datetime.now() et formatées comme suit: "dd-mm-YYYY_HH-MM-SS".
+    
+    Parameters:
+    None
+
+    Returns:
+    dt_string (str) : La date et l'heure courantes sous la forme de chaîne de caractères formatée.
+    """
 def getBeginDateTime():
     a = datetime.now()
     print("DATE =", a)

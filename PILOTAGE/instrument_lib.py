@@ -54,11 +54,25 @@ class DecomFinap:
             binary = bytes(self.mnemos[cmd]['binary'])
             self.binaries[binary] = cmd
 
+    """
+    Récupère des trames spécifiques issues du fichier yaml passé en argument
+    """
     def add_sampletrames(self, fic):
         self.samples = {}
         with open(os.path.join(os.path.dirname(__file__), fic), 'r') as samples:
             self.samples = yaml.safe_load(samples)
 
+    """
+    Convertit une instruction mnémonique en sa représentation en code binaire.
+
+    Parameters :
+    mnemo (str) : L'instruction mnémonique.
+
+    Return :
+    octets : La représentation binaire de l'instruction, ou un objet octet vide si le mnémonique ne correspond à aucun code connu.
+
+    Imprime un message "ERROR" si le mnémonique n'est pas trouvé dans les mnémoniques ou échantillons connus.
+    """
     def mnemo2code(self, mnemo):
         if mnemo and mnemo in self.mnemos:
             return bytes(self.mnemos[mnemo]['binary'])
@@ -67,6 +81,18 @@ class DecomFinap:
         else:
             print("ERROR", mnemo)
 
+    """
+    Retourne si le code code_test est compatible avec le code de référence code_ref.
+
+    Les codes sont considérés compatibles si leur longueur est supérieure à zéro et leur première valeur (masquée par 0x7F) est identique.
+
+    Parameters : 
+    code_ref (bytes) : Code de référence.
+    code_test (bytes) : Code à tester.
+    
+    Return: 
+    bool : Vrai si les codes sont compatibles, faux sinon.
+    """
     def compatible_code(self, code_ref, code_test):
         if code_ref is None or code_test is None:
             return False
@@ -74,6 +100,16 @@ class DecomFinap:
 
         return (lg > 0 and code_ref[0] & 0x7F == code_test[0] & 0x7F)
 
+    """
+    Verifie la compatibilité entre deux mnémoniques
+
+    Parameters:
+    mnemo_ref (str) : mnémonique de référence
+    mnemo_test (str) : mnémonique à tester
+
+    Return:
+    (bool) : True si les deux mnémoniques sont compatibles, False sinon
+    """
     def compatible_mnemo(self, mnemo_ref, mnemo_test):
         if mnemo_ref is None or mnemo_test is None:
             return False
@@ -81,6 +117,15 @@ class DecomFinap:
         code_test = self.mnemo2code(mnemo_test)
         return self.compatible_code(code_ref, code_test)
 
+    """
+    Renvoie l'horodatage de la trame binaire dans le paramètre trame.
+
+    Parameters :
+    trame (octets) : trame binaire dont il faut récupérer l'horodatage
+
+    Return :
+    float : horodatage de la trame binaire ou None s'il n'y a pas de mnémonique correspondant
+    """
     def timetrame(self, trame):
         mnemo = self.trame2mnemo(trame)
         if mnemo and mnemo in self.mnemos and 'time_position' in self.mnemos[mnemo]:
@@ -98,6 +143,16 @@ class DecomFinap:
     def msgtrame(trame):
         return bytes([DecomFinap.cmdgoodtrame(trame)]) + trame[5:]
 
+    """
+    Convertit une trame binaire en mnémonique
+
+    Parameters:
+    trame (bytes) : trame binaire à convertir
+
+    Return:
+    (str) : mnémonique correspondant à la trame binaire ou une représentation hexadécimale du contenu 
+    de la trame si aucun mnémonique ne correspond
+    """
     def trame2mnemo(self, trame):
         if trame is not None and len(trame) > 4:
             bcmd = DecomFinap.cmdgoodtrame(trame)
@@ -121,7 +176,16 @@ class DecomFinap:
 
     ##########
     # Gestion du temps
+    """
+    Calcule et met à jour le décalage entre l'heure actuelle et l'heure représentée dans la trame binaire.
 
+    Parameters :
+    temps (float) : Le temps représenté dans la trame binaire.
+    temps_courant (float, optional) : Le temps actuel, la valeur par défaut est time.perf_counter().
+
+    Return :
+    float : Le décalage mis à jour.
+    """
     def calc_offset(self, temps, temps_courant=time.perf_counter()):
         # on initialise l'offset
         if not self.offset or self.offset == 0:
@@ -139,6 +203,15 @@ class DecomFinap:
 
         return self.offset
 
+    """
+    Complète la trame binaire avec des données mnémoniques et d'horodatage.
+    
+    Parameters :
+    data (dict) : dictionnaire contenant les données de la trame binaire (doit inclure la clé 'binary')
+    
+    Return :
+    (dict) : dictionnaire de données complet, avec les clés 'mnemo', 'tps', 'tps-re' ajoutées si nécessaire.
+    """
     def completedata(self, data):
         if data:
             trame = data['binary']
@@ -153,6 +226,16 @@ class DecomFinap:
 
         return data
 
+    """
+        Décode les données binaires en mnémonique.
+
+        Parameters :
+        data (dict) : données à décoder, doivent comporter les clés 'binary' et 'mnemo'.
+
+        Return :
+        (dict) : dictionnaire des valeurs décodées. Les clés sont les noms de paramètre 
+        et les valeurs sont les valeurs correspondantes.
+        """
     def decomdata(self, data):
         decommutation = None
 
@@ -210,13 +293,27 @@ class Finap:
 
     #############
     # gestion des sorties et des formatages
+    """
+    Sortir l'élément soit vers stdout soit vers une liste/deque
 
+    Parameters :
+    elem (Any) -- L'élément à sortir
+    """
     def _output(self, elem):
         if self.output is None:
             print(elem, file=sys.stdout)
         elif type(self.output) == list or type(self.output) == deque:
             self.output.append(elem)
 
+    """
+    Génère une trame à partir de l'octet de commande.
+
+    Paramètres :
+    octets_cmd (bytes) : octet de commande
+
+    Return :
+    trame (bytes) : trame générée à partir de l'octet de commande
+    """
     def _code2trame(self, octets_cmd):
         crc = crc_func(octets_cmd)
         taille = len(octets_cmd)
@@ -229,36 +326,85 @@ class Finap:
         trame = bytes([0xD4, taille, taille, 0xD4]) + octets_cmd + bytes([crc])
         return trame
 
+    "Convertit un octet en commande en utilisant le format de données binaire."
     def _byte2cmd(self, octet):
         return bytes([octet])
 
     # gestion de la connexion
 
+    """
+    Connecte à un port série.
+
+    Parameters: 
+    port (str) : Port série à connecter (optionnel).
+    Return: 
+    self.serie.is_open (bool) : État de la connexion (True si réussite, False sinon).
+    """
     def connect(self, port=None):
         if port is not None:
             self.port = port
             self.serie = serial.Serial(port=self.port, baudrate=115200, timeout=1)
         return self.serie.is_open
 
+    """
+    Ferme la connexion série et renvoie son état.
+
+    Retourne :
+    bool : False si la connexion est fermée, True sinon.
+    """
     def disconnect(self):
         self.serie.close()
         return not self.serie.is_open
 
+    """
+    Cette fonction gère le contact entre le client et le serveur.
+
+    Si `self.contact['bool']`est `True` et que le temps écoulé depuis le dernier contact est supérieur à 0.5 secondes,
+    la fonction mettra à jour `self.contact['last']` à l'heure actuelle et appellera `self.send_code()` avec 
+    avec `self.contact['code']` comme argument.
+
+    """
     def _contact(self):
         if self.contact['bool'] and time.perf_counter() > self.contact['last'] + 0.5:
             self.contact['last'] = time.perf_counter()
             self.send_code(self.contact['code'])
 
+    """
+   Active la fonction de contact pour envoyer un code spécifique au dispositif série.
+
+   Paramètres
+   ----------
+   code : int
+       Le code à envoyer au dispositif série.
+   """
     def enable_contact(self, code):
         self.contact['bool'] = True
         self.contact['code'] = code
         self._contact()
 
+    """
+    Désactive le contact.
+
+    Le contact est un mécanisme utilisé pour envoyer un code spécifique de manière répétée. Cette fonction le désactive.
+    """
     def disable_contact(self):
         self.contact['bool'] = False
 
     ################
     # Gestion de l'envoi
+    """
+    Tente d'envoyer une trame représentée par une séquence d'octets sur la connexion série.
+
+    Parameters
+    ----------
+    suite_octets : bytes-like
+        La trame à envoyer sur la connexion série.
+
+    Return
+    -------
+    bool
+        `True` si la trame a été envoyée avec succès, `False` sinon.
+    """
     def _send_trame(self, suite_octets):
         try:
             self.serie.write(suite_octets)
@@ -287,6 +433,16 @@ class Finap:
                 print("TROUVE KO {}".format(_str_hex(received[pos:pos + sz])))
                 return False
 
+    """
+    Envoie le code de commande donné et renvoie les données d'envoi
+
+    Parameters :
+    octets_cmd : liste d'octets représentant la commande à envoyer
+
+    Return :
+    dict : données d'envoi comprenant la direction, l'heure d'envoi, la forme binaire de la trame envoyée, cmd, valeur de retour.
+
+    """
     def send_code(self, octets_cmd):
         trame = self._code2trame(octets_cmd)
         data = {
@@ -326,6 +482,19 @@ class Finap:
 
     ####################
     # gestion de la reception
+    """
+    lit les données depuis le tampon du port série et les ajoute à 'self.in1' avec l'heure actuelle.
+
+    La fonction initialise un tableau d'octets 'readbuff' vide et vérifie s'il y a des données dans le tampon 
+    du port série. 
+    S'il y en a, elle lit toutes les données et les assigne à 'readbuff'. 
+    Ensuite, elle recherche l'octet de synchronisation '0xD4' dans le tampon, 
+    le divise à l'octet de synchronisation en paquets séparés et ajoute chaque 
+    paquet avec l'heure actuelle à la liste 'self.in1'.
+
+    Return :
+    readbuff (octets) : les données lues depuis le tampon du port série.
+    """
     def _read_serial(self):
         sync = bytes([0xD4])
 
@@ -347,6 +516,14 @@ class Finap:
 
         return readbuff
 
+    """
+    Lit les valeurs N1 et vérifie les erreurs d'en-tête, de taille et de crc.
+
+    Return :
+    Aucun si le message ne contient pas assez de données.
+    sortie (dict) : Le dictionnaire avec l'en-tête, le message binaire, le contrôle crc et l'horodatage 
+    si le message est complet et passe les contrôles d'en-tête, de taille et de crc.
+    """
     def _read_n1(self):
         sortie = {'head': "", 'binary': "", 'cr': False}
 
@@ -398,6 +575,19 @@ class Finap:
                     sortie = {'binary': entete + message, 'cr': True, 'time': tps}
                     self.in2.append(sortie)
 
+    """
+   Lit les données de la file d'attente in2, les décode et renvoie la trame résultante.
+
+   Return :
+       dict : Trame de données incluse :
+           - direction (str) : La direction de la trame (FINAP -> PC)
+           - cmd (str) : La commande de la trame
+           - reception-time (float) : L'heure de réception de la trame
+           - binary (bytes) : La représentation binaire de la trame
+           - resp (octets) : La réponse de la trame
+           - cr (str) : OK ou KO selon que le cmd est valide ou non.
+
+   """
     def _read_n2(self):
         while self.in2:
             trame_read = self.in2.popleft()
@@ -419,10 +609,31 @@ class Finap:
 
             return data
 
+    """
+    Lit et décode les données de mesure FINAP à partir du port série.
+
+    La méthode `do_staff` est appelée pour traiter les données, et la méthode `_read_n2` 
+    est appelée pour retourner les données décodées.
+
+    Retourne :
+        dict : Un dictionnaire contenant les données de mesure FINAP, 
+        y compris la direction, la commande, le temps de réception, 
+        les données binaires, la réponse et la confirmation du décodage correct.
+    """
     def read_measure(self):
         self.do_staff()
         return self._read_n2()
 
+    """
+    Effectue une communication avec le dispositif.
+
+    Cette méthode exécute les étapes suivantes :
+    1. Démarrer le timer en utilisant time.perf_counter()
+    2. Appelez la méthode `_contact` pour initier la communication avec le périphérique.
+    3. Appelez la méthode `_read_serial` pour lire les données entrantes du périphérique.
+    4. Continuez à appeler `_read_n1` tant que `time.perf_counter()` est inférieur à t1 + 0.2 secondes
+       et que la longueur de `self.in1` est supérieure à 2.
+    """
     def do_staff(self):
         t1 = time.perf_counter()
         self._contact()

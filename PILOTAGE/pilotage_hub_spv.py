@@ -58,7 +58,7 @@ class HubSPV(NetworkItem):
                 info = dict({"Name": "BAP", "Adresse": port.name})
             if info != "":
                 port_data.append(info)
-        #TODO ajouter la récupération des périphériques USB
+
         #affichage du tableau obtenu pour débuggage
         """ListePeripheriques = usb.core.find(find_all=True)
         print("debug")
