@@ -221,7 +221,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
         return conn, address
 
-
     def recup_action(self):
         """
         Cette fonction retourne la liste des actions enregistrées.
