@@ -177,8 +177,6 @@ class Central(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
         return conn, address
 
-    def recup_action(self):
-        return self._actions
 
     def send_log(self, message, level):
         log = {}
